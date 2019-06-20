@@ -22,6 +22,7 @@ from losses import *
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
+
 class Model(object):
     def __init__(self, **kwargs):
         allowed_kwargs = {'name', 'logging'}
@@ -57,15 +58,15 @@ class Model(object):
 
     def build(self):
         """ Wrapper for _build() """
-        #with tf.device('/gpu:0'):
+        # with tf.device('/gpu:0'):
         with tf.variable_scope(self.name):
             self._build()
 
         # Build sequential resnet model
-        eltwise = [3,5,7,9,11,13, 19,21,23,25,27,29, 35,37,39,41,43,45]
+        eltwise = [3, 5, 7, 9, 11, 13, 19, 21, 23, 25, 27, 29, 35, 37, 39, 41, 43, 45]
         concat = [15, 31]
         self.activations.append(self.inputs)
-        for idx,layer in enumerate(self.layers):
+        for idx, layer in enumerate(self.layers):
             hidden = layer(self.activations[-1])
             if idx in eltwise:
                 hidden = tf.add(hidden, self.activations[-2]) * 0.5
@@ -110,9 +111,10 @@ class Model(object):
             raise AttributeError("TensorFlow session not provided.")
         saver = tf.train.Saver(self.vars)
         save_path = "Data/checkpoint/%s.ckpt" % self.name
-        #save_path = "checks/tmp/%s.ckpt" % self.name
+        # save_path = "checks/tmp/%s.ckpt" % self.name
         saver.restore(sess, save_path)
         print("Model restored from file: %s" % save_path)
+
 
 class GCN(Model):
     def __init__(self, placeholders, **kwargs):
@@ -133,19 +135,19 @@ class GCN(Model):
         self.loss += mesh_loss(self.output1, self.placeholders, 1)
         self.loss += mesh_loss(self.output2, self.placeholders, 2)
         self.loss += mesh_loss(self.output3, self.placeholders, 3)
-        self.loss += .1*laplace_loss(self.inputs, self.output1, self.placeholders, 1)
+        self.loss += .1 * laplace_loss(self.inputs, self.output1, self.placeholders, 1)
         self.loss += laplace_loss(self.output1_2, self.output2, self.placeholders, 2)
         self.loss += laplace_loss(self.output2_2, self.output3, self.placeholders, 3)
 
         # Weight decay loss
-        conv_layers = range(1,15) + range(17,31) + range(33,48)
+        conv_layers = range(1, 15) + range(17, 31) + range(33, 48)
         for layer_id in conv_layers:
             for var in self.layers[layer_id].vars.values():
                 self.loss += FLAGS.weight_decay * tf.nn.l2_loss(var)
 
     def _build(self):
-        self.build_cnn18() #update image feature
-		# first project block
+        self.build_cnn18()  # update image feature
+        # first project block
         self.layers.append(GraphProjection(placeholders=self.placeholders))
         self.layers.append(GraphConvolution(input_dim=FLAGS.feat_dim,
                                             output_dim=FLAGS.hidden,
@@ -161,10 +163,10 @@ class GCN(Model):
                                             act=lambda x: x,
                                             gcn_block_id=1,
                                             placeholders=self.placeholders, logging=self.logging))
-		# second project block
+        # second project block
         self.layers.append(GraphProjection(placeholders=self.placeholders))
-        self.layers.append(GraphPooling(placeholders=self.placeholders, pool_id=1)) # unpooling
-        self.layers.append(GraphConvolution(input_dim=FLAGS.feat_dim+FLAGS.hidden,
+        self.layers.append(GraphPooling(placeholders=self.placeholders, pool_id=1))  # unpooling
+        self.layers.append(GraphConvolution(input_dim=FLAGS.feat_dim + FLAGS.hidden,
                                             output_dim=FLAGS.hidden,
                                             gcn_block_id=2,
                                             placeholders=self.placeholders, logging=self.logging))
@@ -178,10 +180,10 @@ class GCN(Model):
                                             act=lambda x: x,
                                             gcn_block_id=2,
                                             placeholders=self.placeholders, logging=self.logging))
-		# third project block
+        # third project block
         self.layers.append(GraphProjection(placeholders=self.placeholders))
-        self.layers.append(GraphPooling(placeholders=self.placeholders, pool_id=2)) # unpooling
-        self.layers.append(GraphConvolution(input_dim=FLAGS.feat_dim+FLAGS.hidden,
+        self.layers.append(GraphPooling(placeholders=self.placeholders, pool_id=2))  # unpooling
+        self.layers.append(GraphConvolution(input_dim=FLAGS.feat_dim + FLAGS.hidden,
                                             output_dim=FLAGS.hidden,
                                             gcn_block_id=3,
                                             placeholders=self.placeholders, logging=self.logging))
@@ -191,48 +193,66 @@ class GCN(Model):
                                                 gcn_block_id=3,
                                                 placeholders=self.placeholders, logging=self.logging))
         self.layers.append(GraphConvolution(input_dim=FLAGS.hidden,
-                                            output_dim=int(FLAGS.hidden/2),
+                                            output_dim=int(FLAGS.hidden / 2),
                                             gcn_block_id=3,
                                             placeholders=self.placeholders, logging=self.logging))
-        self.layers.append(GraphConvolution(input_dim=int(FLAGS.hidden/2),
+        self.layers.append(GraphConvolution(input_dim=int(FLAGS.hidden / 2),
                                             output_dim=FLAGS.coord_dim,
                                             act=lambda x: x,
                                             gcn_block_id=3,
                                             placeholders=self.placeholders, logging=self.logging))
 
     def build_cnn18(self):
-		x=self.placeholders['img_inp']
-		x=tf.expand_dims(x, 0)
-#224 224
-		x=tflearn.layers.conv.conv_2d(x,16,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x=tflearn.layers.conv.conv_2d(x,16,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x0=x
-		x=tflearn.layers.conv.conv_2d(x,32,(3,3),strides=2,activation='relu',weight_decay=1e-5,regularizer='L2')
-#112 112
-		x=tflearn.layers.conv.conv_2d(x,32,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x=tflearn.layers.conv.conv_2d(x,32,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x1=x
-		x=tflearn.layers.conv.conv_2d(x,64,(3,3),strides=2,activation='relu',weight_decay=1e-5,regularizer='L2')
-#56 56
-		x=tflearn.layers.conv.conv_2d(x,64,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x=tflearn.layers.conv.conv_2d(x,64,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x2=x
-		x=tflearn.layers.conv.conv_2d(x,128,(3,3),strides=2,activation='relu',weight_decay=1e-5,regularizer='L2')
-#28 28
-		x=tflearn.layers.conv.conv_2d(x,128,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x=tflearn.layers.conv.conv_2d(x,128,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x3=x
-		x=tflearn.layers.conv.conv_2d(x,256,(5,5),strides=2,activation='relu',weight_decay=1e-5,regularizer='L2')
-#14 14
-		x=tflearn.layers.conv.conv_2d(x,256,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x=tflearn.layers.conv.conv_2d(x,256,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x4=x
-		x=tflearn.layers.conv.conv_2d(x,512,(5,5),strides=2,activation='relu',weight_decay=1e-5,regularizer='L2')
-#7 7
-		x=tflearn.layers.conv.conv_2d(x,512,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x=tflearn.layers.conv.conv_2d(x,512,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x=tflearn.layers.conv.conv_2d(x,512,(3,3),strides=1,activation='relu',weight_decay=1e-5,regularizer='L2')
-		x5=x
-#updata image feature
-		self.placeholders.update({'img_feat': [tf.squeeze(x2), tf.squeeze(x3), tf.squeeze(x4), tf.squeeze(x5)]})
-		self.loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)) * 0.3
+        x = self.placeholders['img_inp']
+        x = tf.expand_dims(x, 0)
+        # 224 224
+        x = tflearn.layers.conv.conv_2d(x, 16, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x = tflearn.layers.conv.conv_2d(x, 16, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x0 = x
+        x = tflearn.layers.conv.conv_2d(x, 32, (3, 3), strides=2, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        # 112 112
+        x = tflearn.layers.conv.conv_2d(x, 32, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x = tflearn.layers.conv.conv_2d(x, 32, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x1 = x
+        x = tflearn.layers.conv.conv_2d(x, 64, (3, 3), strides=2, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        # 56 56
+        x = tflearn.layers.conv.conv_2d(x, 64, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x = tflearn.layers.conv.conv_2d(x, 64, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x2 = x
+        x = tflearn.layers.conv.conv_2d(x, 128, (3, 3), strides=2, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        # 28 28
+        x = tflearn.layers.conv.conv_2d(x, 128, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x = tflearn.layers.conv.conv_2d(x, 128, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x3 = x
+        x = tflearn.layers.conv.conv_2d(x, 256, (5, 5), strides=2, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        # 14 14
+        x = tflearn.layers.conv.conv_2d(x, 256, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x = tflearn.layers.conv.conv_2d(x, 256, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x4 = x
+        x = tflearn.layers.conv.conv_2d(x, 512, (5, 5), strides=2, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        # 7 7
+        x = tflearn.layers.conv.conv_2d(x, 512, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x = tflearn.layers.conv.conv_2d(x, 512, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x = tflearn.layers.conv.conv_2d(x, 512, (3, 3), strides=1, activation='relu', weight_decay=1e-5,
+                                        regularizer='L2')
+        x5 = x
+        # updata image feature
+        self.placeholders.update({'img_feat': [tf.squeeze(x2), tf.squeeze(x3), tf.squeeze(x4), tf.squeeze(x5)]})
+        self.loss += tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)) * 0.3
