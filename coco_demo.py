@@ -14,9 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
+import cv2
+
 import tensorflow as tf
 import pickle
 from skimage import io, transform
+
+from pycocotools.coco import COCO
 from p2m.api import GCN
 from p2m.utils import *
 
@@ -91,4 +96,32 @@ def run(image):
     print ('Saved to', pred_path)
 
 
-run(FLAGS.image)
+annotation_file = "Data/mscoco/annotations/instances_val2017.json"
+image_root = "Data/mscoco/val2017"
+
+coco = COCO(annotation_file)
+counter = 0
+for anno_id in coco.getAnnIds(iscrowd=0):
+    anno = coco.loadAnns([anno_id])[0]
+    if anno["area"] < 10000 or anno["category_id"] != 62:
+        continue
+
+    img = coco.loadImgs(anno["image_id"])[0]["file_name"]
+    image = io.imread(os.path.join(image_root, img))
+    if len(anno["segmentation"]) > 1:
+        continue
+    segmentation = np.array(anno["segmentation"]).flatten()
+    segmentation = segmentation.reshape((-1, 2)).astype(np.int32)
+    mask = np.zeros(image.shape)
+    cv2.fillPoly(mask, [segmentation], (1, 1, 1))
+    image[mask == 0] = 255
+    image = transform.resize(image, (224, 224)).astype('float32')
+    image_path = ("Data/examples/coco/%s" % img).replace(".jpg", ".png")
+    io.imsave(image_path, image)
+    run(image_path)
+
+    print(anno, img)
+
+    counter += 1
+    if counter >= 100:
+        break
