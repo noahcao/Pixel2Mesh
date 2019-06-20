@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from __future__ import division
 import tensorflow as tf
 import numpy as np
+
 
 def uniform(shape, scale=0.05, name=None):
     """Uniform init."""
@@ -26,7 +26,7 @@ def uniform(shape, scale=0.05, name=None):
 
 def glorot(shape, name=None):
     """Glorot & Bengio (AISTATS 2010) init."""
-    init_range = np.sqrt(6.0/(shape[0]+shape[1]))
+    init_range = np.sqrt(6.0 / (shape[0] + shape[1]))
     initial = tf.random_uniform(shape, minval=-init_range, maxval=init_range, dtype=tf.float32)
     return tf.Variable(initial, name=name)
 
@@ -41,3 +41,21 @@ def ones(shape, name=None):
     """All ones."""
     initial = tf.ones(shape, dtype=tf.float32)
     return tf.Variable(initial, name=name)
+
+
+def sparse_dropout(x, keep_prob, noise_shape):
+    """Dropout for sparse tensors."""
+    random_tensor = keep_prob
+    random_tensor += tf.random_uniform(noise_shape)
+    dropout_mask = tf.cast(tf.floor(random_tensor), dtype=tf.bool)
+    pre_out = tf.sparse_retain(x, dropout_mask)
+    return pre_out * (1. / keep_prob)
+
+
+def dot(x, y, sparse=False):
+    """Wrapper for tf.matmul (sparse vs dense)."""
+    if sparse:
+        res = tf.sparse_tensor_dense_matmul(x, y)
+    else:
+        res = tf.matmul(x, y)
+    return res
