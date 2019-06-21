@@ -110,3 +110,6 @@ models
 log
 darknet
 pretrained
+
+# cocoapi
+cocoapi
