@@ -18,7 +18,7 @@ from multiprocessing import Queue
 
 import random
 import numpy as np
-import cPickle as pickle
+import pickle
 import threading
 from skimage import io, transform
 
@@ -42,7 +42,8 @@ class DataFetcher(threading.Thread):
 
     def work(self, idx):
         pkl_path = self.pkl_list[idx]
-        label = pickle.load(open(pkl_path, 'rb'))
+        with open(pkl_path, 'rb') as pkl_file:
+            label = pickle.load(pkl_file)
 
         img_path = pkl_path.replace('.dat', '.png')
         '''
@@ -63,7 +64,7 @@ class DataFetcher(threading.Thread):
             self.queue.put(self.work(self.index % self.number))
             self.index += 1
             if self.index % self.number == 0:
-                np.random.shuffle(self.pkl_list)
+                random.shuffle(self.pkl_list)
 
     def fetch(self):
         if self.stopped:

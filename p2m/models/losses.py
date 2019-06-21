@@ -16,7 +16,7 @@
 #
 import tensorflow as tf
 
-from chamfer import chamfer_min
+from tf_ops.tf_nndistance import nn_distance
 
 
 def laplace_coord(pred, placeholders, block_id):
@@ -59,8 +59,7 @@ def mesh_loss(pred, placeholders, block_id):
     edge_loss = tf.reduce_mean(edge_length) * 300
 
     # chamer distance
-    dist1, idx1 = chamfer_min(gt_pt, pred)
-    dist2, idx2 = chamfer_min(pred, gt_pt)
+    dist1, idx1, dist2, idx2 = nn_distance(gt_pt, pred)
     point_loss = (tf.reduce_mean(dist1) + 0.55 * tf.reduce_mean(dist2)) * 3000
 
     # normal cosine loss

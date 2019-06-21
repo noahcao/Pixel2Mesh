@@ -6,6 +6,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.o
 cpu_nms.c
 gpu_nms.cpp
 
@@ -25,6 +26,10 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+cmake-build-debug
+CMakeCache.txt
+cmake_install.cmake
+CMakeFiles
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
