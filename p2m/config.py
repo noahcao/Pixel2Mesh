@@ -13,7 +13,7 @@ config.WORKERS = 4
 config.PRINT_FREQ = 20
 
 config.MODEL = edict()
-config.MODEL.HIDDEN = 256  # gcn hidden layer channel
+config.MODEL.HIDDEN_DIM = 256  # gcn hidden layer channel
 config.MODEL.FEAT_DIM = 963  # Number of units in feature layer, image feature dim
 config.MODEL.COORD_DIM = 3  # Number of units in output layer
 

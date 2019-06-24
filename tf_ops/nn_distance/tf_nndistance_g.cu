@@ -1,6 +1,4 @@
-#if GOOGLE_CUDA
 #define EIGEN_USE_GPU
-
 
 __global__ void NmDistanceKernel(int b, int n, const float *xyz, int m, const float *xyz2, float *result, int *result_i) {
     const int batch = 512;
@@ -162,5 +160,3 @@ void NmDistanceGradKernelLauncher(int b, int n, const float *xyz1, int m, const 
     NmDistanceGradKernel <<<dim3(1, 16, 1), 256>>> (b, n, xyz1, m, xyz2, grad_dist1, idx1, grad_xyz1, grad_xyz2);
     NmDistanceGradKernel <<<dim3(1, 16, 1), 256>>> (b, m, xyz2, n, xyz1, grad_dist2, idx2, grad_xyz2, grad_xyz1);
 }
-
-#endif

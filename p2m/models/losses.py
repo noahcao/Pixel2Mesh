@@ -60,9 +60,10 @@ def mesh_loss(pred, labels, edges):
 def gcn_loss(target, pred):
     loss = 0
     for i in range(3):
-        loss += mesh_loss(pred["outputs"][i], target["labels"], target["edges"][i])
-    loss += .1 * laplace_loss(target["features"], pred["outputs"][0], target["lape_idx"][0])
+        loss += mesh_loss(pred["outputs"][i], target["labels"], target["edges_%d" % i])
+    loss += .1 * laplace_loss(target["features"], pred["outputs"][0], target["lape_idx_0"])
     for i in range(1, 3):
-        loss += laplace_loss(target["outputs_unpool"][i - 1], pred["outputs"][i], target["lape_idx"][i]) + \
-                move_loss(target["outputs_unpool"][i - 1], pred["outputs"][i])
+        loss += laplace_loss(pred["outputs_unpool_%d" % (i - 1)],
+                             pred["outputs"][i], target["lape_idx_%d" % i]) + \
+                move_loss(pred["outputs_unpool"][i - 1], pred["outputs"][i])
     return loss

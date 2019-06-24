@@ -15,9 +15,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
 find_package(TensorFlow REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${TensorFlow_CXX_ABI}")
 
+# find cuda
+find_package(CUDA 9.0 REQUIRED)
+message(${CUDA_TOOLKIT_ROOT_DIR})
+
 link_directories(
         ${TensorFlow_DIR}
-        ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES}
+        cudart ${CUDART_LIBRARY}
 )
 include_directories(
         ${TensorFlow_INCLUDE_DIR}
@@ -28,10 +32,14 @@ include_directories(
 add_library(tf_approxmatch SHARED approxmatch/tf_approxmatch_g.cu approxmatch/tf_approxmatch.cpp)
 target_compile_features(tf_approxmatch PUBLIC cxx_std_11)
 target_link_libraries(tf_approxmatch cudart tensorflow_framework)
-set_target_properties(tf_approxmatch PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+# set_target_properties(tf_approxmatch PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 # nn_distance
 add_library(tf_nndistance SHARED nn_distance/tf_nndistance_g.cu nn_distance/tf_nndistance.cpp)
 target_compile_features(tf_nndistance PUBLIC cxx_std_11)
 target_link_libraries(tf_nndistance cudart tensorflow_framework)
-set_target_properties(tf_nndistance PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+# set_target_properties(tf_nndistance PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(test test.cu)
+target_compile_features(test PUBLIC cxx_std_11)
+target_link_libraries(test cudart tensorflow_framework)
