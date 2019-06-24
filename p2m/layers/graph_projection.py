@@ -1,6 +1,5 @@
 import tensorflow as tf
-
-from p2m.layers.base import Layer
+from tensorflow.python.keras.engine import Layer
 
 
 def project(img_feat, x, y, dim):
@@ -29,49 +28,14 @@ def project(img_feat, x, y, dim):
     return outputs
 
 
-
 class GraphProjection(Layer):
     """Graph Pooling layer."""
 
-    def __init__(self, placeholders, **kwargs):
-        super(GraphProjection, self).__init__(**kwargs)
-
-        self.img_feat = placeholders['img_feat']
-
-    '''
-    def _call(self, inputs):
-        coord = inputs
-        X = inputs[:, 0]
-        Y = inputs[:, 1]
-        Z = inputs[:, 2]
-
-        #h = (-Y)/(-Z)*248 + 224/2.0 - 1
-        #w = X/(-Z)*248 + 224/2.0 - 1 [28,14,7,4]
-        h = 248.0 * tf.divide(-Y, -Z) + 112.0
-        w = 248.0 * tf.divide(X, -Z) + 112.0
-
-        h = tf.minimum(tf.maximum(h, 0), 223)
-        w = tf.minimum(tf.maximum(w, 0), 223)
-        indeces = tf.stack([h,w], 1)
-
-        idx = tf.cast(indeces/(224.0/56.0), tf.int32)
-        out1 = tf.gather_nd(self.img_feat[0], idx)
-        idx = tf.cast(indeces/(224.0/28.0), tf.int32)
-        out2 = tf.gather_nd(self.img_feat[1], idx)
-        idx = tf.cast(indeces/(224.0/14.0), tf.int32)
-        out3 = tf.gather_nd(self.img_feat[2], idx)
-        idx = tf.cast(indeces/(224.0/7.00), tf.int32)
-        out4 = tf.gather_nd(self.img_feat[3], idx)
-
-        outputs = tf.concat([coord,out1,out2,out3,out4], 1)
-        return outputs
-    '''
-
-    def _call(self, inputs):
-        coord = inputs
-        X = inputs[:, 0]
-        Y = inputs[:, 1]
-        Z = inputs[:, 2]
+    def call(self, inputs, **kwargs):
+        coord, img_feat = inputs
+        X = coord[:, 0]
+        Y = coord[:, 1]
+        Z = coord[:, 2]
 
         h = 250 * tf.divide(-Y, -Z) + 112
         w = 250 * tf.divide(X, -Z) + 112
@@ -81,18 +45,18 @@ class GraphProjection(Layer):
 
         x = h / (224.0 / 56)
         y = w / (224.0 / 56)
-        out1 = project(self.img_feat[0], x, y, 64)
+        out1 = project(img_feat[0], x, y, 64)
 
         x = h / (224.0 / 28)
         y = w / (224.0 / 28)
-        out2 = project(self.img_feat[1], x, y, 128)
+        out2 = project(img_feat[1], x, y, 128)
 
         x = h / (224.0 / 14)
         y = w / (224.0 / 14)
-        out3 = project(self.img_feat[2], x, y, 256)
+        out3 = project(img_feat[2], x, y, 256)
 
         x = h / (224.0 / 7)
         y = w / (224.0 / 7)
-        out4 = project(self.img_feat[3], x, y, 512)
+        out4 = project(img_feat[3], x, y, 512)
         outputs = tf.concat([coord, out1, out2, out3, out4], 1)
         return outputs

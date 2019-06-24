@@ -1,20 +1,15 @@
 import tensorflow as tf
-
-from p2m.layers.base import Layer
+from tensorflow.python.keras.engine import Layer
 
 
 class GraphPooling(Layer):
-    """Graph Pooling layer."""
 
-    def __init__(self, placeholders, pool_id=1, **kwargs):
+    def __init__(self, pool_idx, **kwargs):
         super(GraphPooling, self).__init__(**kwargs)
+        self.pool_idx = pool_idx
 
-        self.pool_idx = placeholders['pool_idx'][pool_id - 1]
-
-    def _call(self, inputs):
-        X = inputs
-
-        add_feat = (1 / 2.0) * tf.reduce_sum(tf.gather(X, self.pool_idx), 1)
-        outputs = tf.concat([X, add_feat], 0)
+    def call(self, inputs, *args):
+        add_feat = (1 / 2.0) * tf.reduce_sum(tf.gather(inputs, self.pool_idx), 1)
+        outputs = tf.concat([inputs, add_feat], 0)
 
         return outputs

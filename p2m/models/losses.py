@@ -1,28 +1,12 @@
-#  Copyright (C) 2019 Nanyang Wang, Yinda Zhang, Zhuwen Li, Yanwei Fu, Wei Liu, Yu-Gang Jiang, Fudan University
-#
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 import tensorflow as tf
 
 from tf_ops.tf_nndistance import nn_distance
 
 
-def laplace_coord(pred, placeholders, block_id):
+def laplace_coord(pred, lape_idx):
     vertex = tf.concat([pred, tf.zeros([1, 3])], 0)
-    indices = placeholders['lape_idx'][block_id - 1][:, :8]
-    weights = tf.cast(placeholders['lape_idx'][block_id - 1][:, -1], tf.float32)
+    indices = lape_idx[:, :8]
+    weights = tf.cast(lape_idx[:, -1], tf.float32)
 
     weights = tf.tile(tf.reshape(tf.reciprocal(weights), [-1, 1]), [1, 3])
     laplace = tf.reduce_sum(tf.gather(vertex, indices), 1)
@@ -30,28 +14,28 @@ def laplace_coord(pred, placeholders, block_id):
     return laplace
 
 
-def laplace_loss(pred1, pred2, placeholders, block_id):
+def laplace_loss(pred1, pred2, lape_idx):
     # laplace term
-    lap1 = laplace_coord(pred1, placeholders, block_id)
-    lap2 = laplace_coord(pred2, placeholders, block_id)
-    laplace_loss = tf.reduce_mean(tf.reduce_sum(tf.square(tf.subtract(lap1, lap2)), 1)) * 1500
+    lap1 = laplace_coord(pred1, lape_idx)
+    lap2 = laplace_coord(pred2, lape_idx)
+    return tf.reduce_mean(tf.reduce_sum(tf.square(tf.subtract(lap1, lap2)), 1)) * 1500
 
-    move_loss = tf.reduce_mean(tf.reduce_sum(tf.square(tf.subtract(pred1, pred2)), 1)) * 100
-    move_loss = tf.cond(tf.equal(block_id, 1), lambda: 0., lambda: move_loss)
-    return laplace_loss + move_loss
+
+def move_loss(pred1, pred2):
+    return tf.reduce_mean(tf.reduce_sum(tf.square(tf.subtract(pred1, pred2)), 1)) * 100
 
 
 def unit(tensor):
     return tf.nn.l2_normalize(tensor, dim=1)
 
 
-def mesh_loss(pred, placeholders, block_id):
-    gt_pt = placeholders['labels'][:, :3]  # gt points
-    gt_nm = placeholders['labels'][:, 3:]  # gt normals
+def mesh_loss(pred, labels, edges):
+    gt_pt = labels[:, :3]  # gt points
+    gt_nm = labels[:, 3:]  # gt normals
 
     # edge in graph
-    nod1 = tf.gather(pred, placeholders['edges'][block_id - 1][:, 0])
-    nod2 = tf.gather(pred, placeholders['edges'][block_id - 1][:, 1])
+    nod1 = tf.gather(pred, edges[:, 0])
+    nod2 = tf.gather(pred, edges[:, 1])
     edge = tf.subtract(nod1, nod2)
 
     # edge length loss
@@ -64,10 +48,21 @@ def mesh_loss(pred, placeholders, block_id):
 
     # normal cosine loss
     normal = tf.gather(gt_nm, tf.squeeze(idx2, 0))
-    normal = tf.gather(normal, placeholders['edges'][block_id - 1][:, 0])
+    normal = tf.gather(normal, edges[:, 0])
     cosine = tf.abs(tf.reduce_sum(tf.multiply(unit(normal), unit(edge)), 1))
     # cosine = tf.where(tf.greater(cosine,0.866), tf.zeros_like(cosine), cosine) # truncated
     normal_loss = tf.reduce_mean(cosine) * 0.5
 
     total_loss = point_loss + edge_loss + normal_loss
     return total_loss
+
+
+def gcn_loss(target, pred):
+    loss = 0
+    for i in range(3):
+        loss += mesh_loss(pred["outputs"][i], target["labels"], target["edges"][i])
+    loss += .1 * laplace_loss(target["features"], pred["outputs"][0], target["lape_idx"][0])
+    for i in range(1, 3):
+        loss += laplace_loss(target["outputs_unpool"][i - 1], pred["outputs"][i], target["lape_idx"][i]) + \
+                move_loss(target["outputs_unpool"][i - 1], pred["outputs"][i])
+    return loss

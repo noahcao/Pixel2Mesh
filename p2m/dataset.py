@@ -1,20 +1,4 @@
-#  Copyright (C) 2019 Nanyang Wang, Yinda Zhang, Zhuwen Li, Yanwei Fu, Wei Liu, Yu-Gang Jiang, Fudan University
-#
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-from multiprocessing import Queue
+import tensorflow as tf
 
 import random
 import numpy as np
@@ -75,3 +59,14 @@ class DataFetcher(threading.Thread):
         self.stopped = True
         while not self.queue.empty():
             self.queue.get()
+
+
+def create_dataset(filename):
+    with open(filename, "r") as f:
+        file_list = [s.strip() for s in f.readlines()]
+    return tf.data.Dataset.from_tensor_slices(file_list)
+
+
+def shapenet_p2m_process(filename):
+    pass
+
