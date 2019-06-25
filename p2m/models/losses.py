@@ -43,7 +43,8 @@ def mesh_loss(pred, labels, edges):
     edge_loss = tf.reduce_mean(edge_length) * 300
 
     # chamer distance
-    dist1, idx1, dist2, idx2 = nn_distance(gt_pt, pred)
+    # nn_distance requires batch input
+    dist1, idx1, dist2, idx2 = nn_distance(tf.expand_dims(gt_pt, 0), tf.expand_dims(pred, 0))
     point_loss = (tf.reduce_mean(dist1) + 0.55 * tf.reduce_mean(dist2)) * 3000
 
     # normal cosine loss
@@ -63,7 +64,7 @@ def gcn_loss(target, pred):
         loss += mesh_loss(pred["outputs"][i], target["labels"], target["edges_%d" % i])
     loss += .1 * laplace_loss(target["features"], pred["outputs"][0], target["lape_idx_0"])
     for i in range(1, 3):
-        loss += laplace_loss(pred["outputs_unpool_%d" % (i - 1)],
+        loss += laplace_loss(pred["outputs_unpool"][i - 1],
                              pred["outputs"][i], target["lape_idx_%d" % i]) + \
                 move_loss(pred["outputs_unpool"][i - 1], pred["outputs"][i])
     return loss

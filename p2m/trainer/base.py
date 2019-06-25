@@ -27,7 +27,13 @@ class Trainer(object):
         for i, t in enumerate(pkl[7][:num_blocks]):
             self.initial_params["lape_idx_%d" % i] = tf.convert_to_tensor(t)
         pool_idx = [tf.convert_to_tensor(t) for t in pkl[4][:num_blocks - 1]]
-        support = [[tf.SparseTensor(*pkl[i + 1][j]) for j in range(num_supports)] for i in range(3)]
+        support = []
+        for i in range(3):
+            support.append([])
+            for j in range(num_supports):
+                indices, values, dense_shape = pkl[i + 1][j]
+                values = values.astype(np.float32)
+                support[-1].append(tf.SparseTensor(indices, values, dense_shape))
 
         self.model = GCN(config, pool_idx, support)
         self.optimizer = AdamOptimizer(learning_rate=config.TRAIN.LEARNING_RATE)
@@ -46,7 +52,7 @@ class Trainer(object):
 
     def train(self):
         for epoch in range(3):
-            print('Start of epoch %d' % epoch)
+            print('### Start of epoch %d ###' % epoch)
             for step, batch in enumerate(self.dataset):
                 with tf.GradientTape() as tape:
                     outputs = self.model(batch)
@@ -56,6 +62,5 @@ class Trainer(object):
                 self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
 
                 # Log every 200 batches.
-                if step % 200 == 0:
+                if step % 20 == 0:
                     print('Training loss (for one batch) at step %s: %s' % (step, float(loss_value)))
-                    print('Seen so far: %s samples' % ((step + 1) * 64))

@@ -48,6 +48,6 @@ class GraphConvolution(Layer):
             supports.append(support)
         output = tf.add_n(supports)
 
-        if self.bias:
+        if self.bias is not None:
             output += self.bias
         return self.activations(output)

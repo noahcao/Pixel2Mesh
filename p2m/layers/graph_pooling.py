@@ -2,10 +2,10 @@ import tensorflow as tf
 from tensorflow.python.keras.engine import Layer
 
 
-class GraphPooling(Layer):
+class GraphUnpooling(Layer):
 
     def __init__(self, pool_idx, **kwargs):
-        super(GraphPooling, self).__init__(**kwargs)
+        super(GraphUnpooling, self).__init__(**kwargs)
         self.pool_idx = pool_idx
 
     def call(self, inputs, *args):
