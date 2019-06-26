@@ -1,0 +1,4 @@
+train:
+  test_steps: 100
+test:
+  summary_steps: 50
