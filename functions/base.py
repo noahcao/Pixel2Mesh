@@ -5,7 +5,8 @@ import torch
 import torch.nn
 from tensorboardX import SummaryWriter
 
-from datasets import create_dataset, BaseDataset
+import config
+from datasets.shapenet import ShapeNet
 from functions.saver import CheckpointSaver
 
 
@@ -43,9 +44,9 @@ class CheckpointRunner(object):
             self.init_with_checkpoint()
 
     def load_dataset(self, dataset, training):
-        if training:
-            return create_dataset(dataset, self.options)
-        return BaseDataset(self.options, dataset, training=False)
+        if dataset.name == "shapenet":
+            return ShapeNet(config.SHAPENET_ROOT, dataset.subset_train if training else dataset.subset_eval)
+        raise NotImplementedError("Unsupported dataset")
 
     def init_fn(self, shared_model=None, **kwargs):
         raise NotImplementedError('You need to provide an _init_fn method')

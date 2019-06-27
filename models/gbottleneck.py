@@ -5,35 +5,35 @@ from models.layers.gconv import GConv
 
 class GResBlock(nn.Module):
 
-    def __init__(self, in_dim, hidden_dim, adjs, use_cuda):
+    def __init__(self, in_dim, hidden_dim, adjs):
         super(GResBlock, self).__init__()
 
-        self.conv1 = GConv(in_features=in_dim, out_features=hidden_dim, adjs=adjs, use_cuda=use_cuda)
-        self.conv2 = GConv(in_features=in_dim, out_features=hidden_dim, adjs=adjs, use_cuda=use_cuda)
+        self.conv1 = GConv(in_features=in_dim, out_features=hidden_dim, adjs=adjs)
+        self.conv2 = GConv(in_features=in_dim, out_features=hidden_dim, adjs=adjs)
 
-    def forward(self, input):
-        x = self.conv1(input)
+    def forward(self, inputs):
+        x = self.conv1(inputs)
         x = self.conv2(x)
 
-        return (input + x) * 0.5
+        return (inputs + x) * 0.5
 
 
 class GBottleneck(nn.Module):
 
-    def __init__(self, block_num, in_dim, hidden_dim, out_dim, adjs, use_cuda):
+    def __init__(self, block_num, in_dim, hidden_dim, out_dim, adjs):
         super(GBottleneck, self).__init__()
 
-        blocks = [GResBlock(in_dim=hidden_dim, hidden_dim=hidden_dim, adjs=adjs, use_cuda=use_cuda)]
+        blocks = [GResBlock(in_dim=hidden_dim, hidden_dim=hidden_dim, adjs=adjs)]
 
         for _ in range(block_num - 1):
-            blocks.append(GResBlock(in_dim=hidden_dim, hidden_dim=hidden_dim, adjs=adjs, use_cuda=use_cuda))
+            blocks.append(GResBlock(in_dim=hidden_dim, hidden_dim=hidden_dim, adjs=adjs))
 
         self.blocks = nn.Sequential(*blocks)
-        self.conv1 = GConv(in_features=in_dim, out_features=hidden_dim, adjs=adjs, use_cuda=use_cuda)
-        self.conv2 = GConv(in_features=hidden_dim, out_features=out_dim, adjs=adjs, use_cuda=use_cuda)
+        self.conv1 = GConv(in_features=in_dim, out_features=hidden_dim, adjs=adjs)
+        self.conv2 = GConv(in_features=hidden_dim, out_features=out_dim, adjs=adjs)
 
-    def forward(self, input):
-        x = self.conv1(input)
+    def forward(self, inputs):
+        x = self.conv1(inputs)
         x_cat = self.blocks(x)
         x_out = self.conv2(x_cat)
 

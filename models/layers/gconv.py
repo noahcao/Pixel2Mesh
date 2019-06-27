@@ -6,19 +6,17 @@ import torch.nn as nn
 from scipy.sparse import coo_matrix
 
 
-def torch_sparse_tensor(indice, value, size, use_cuda):
+def torch_sparse_tensor(indice, value, size):
     coo = coo_matrix((value, (indice[:, 0], indice[:, 1])), shape = size)
     values = coo.data
     indices = np.vstack((coo.row, coo.col))
 
-    i = torch.LongTensor(indices)
-    v = torch.FloatTensor(values)
+    i = torch.tensor(indices, dtype=torch.long)
+    v = torch.tensor(values, dtype=torch.float32)
     shape = coo.shape
 
-    if use_cuda:
-        return torch.sparse.FloatTensor(i, v, shape).cuda()
-    else:
-        return torch.sparse.FloatTensor(i, v, shape)
+    return torch.sparse.FloatTensor(i, v, shape)
+
 
 def dot(x, y, sparse = False):
     """Wrapper for torch.matmul (sparse vs dense)."""
@@ -35,13 +33,13 @@ class GConv(nn.Module):
     Similar to https://arxiv.org/abs/1609.02907
     """
 
-    def __init__(self, in_features, out_features, adjs, bias=True, use_cuda=True):
+    def __init__(self, in_features, out_features, adjs, bias=True):
         super(GConv, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
 
-        adj0 = torch_sparse_tensor(*adjs[0], use_cuda)
-        adj1 = torch_sparse_tensor(*adjs[1], use_cuda)
+        adj0 = torch_sparse_tensor(*adjs[0])
+        adj1 = torch_sparse_tensor(*adjs[1])
         self.adjs = [adj0, adj1]
 
         self.weight = nn.Parameter(torch.zeros((in_features, out_features), dtype=torch.float32))

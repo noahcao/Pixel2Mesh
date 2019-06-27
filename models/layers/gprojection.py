@@ -13,8 +13,6 @@ class GProjection(nn.Module):
         super(GProjection, self).__init__()
 
     def forward(self, img_features, input):
-        self.img_feats = img_features
-
         h = 248 * torch.div(input[:, 1], input[:, 2]) + 111.5
         w = 248 * torch.div(input[:, 0], -input[:, 2]) + 111.5
 
@@ -26,14 +24,14 @@ class GProjection(nn.Module):
         feats = [input]
 
         for i in range(4):
-            out = self.project(i, h, w, img_sizes[i], out_dims[i])
+            out = self.project(i, h, w, img_sizes[i], img_features)
             feats.append(out)
 
         output = torch.cat(feats, 1)
 
         return output
 
-    def project(self, index, h, w, img_size, out_dim):
+    def project(self, index, h, w, img_size, img_features):
         img_feat = self.img_feats[index]
         x = h / (224. / img_size)
         y = w / (224. / img_size)

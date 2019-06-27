@@ -7,34 +7,31 @@ from torch.utils.data import DataLoader
 
 from functions.base import CheckpointRunner
 from functions.evaluator import Evaluator
-from models import SMPL, CMR
-from models.losses import CMRLoss
+from models.losses.p2m import P2MLoss
+from models.p2m import P2MModel
 from utils.average_meter import AverageMeter
-from utils.mesh import Mesh
-from utils.renderer import Renderer, visualize_batch_recon_and_keypoints
+from utils.mesh import Ellipsoid
 
 
 class Trainer(CheckpointRunner):
 
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):
-
-        # create Mesh object
-        self.mesh = Mesh()
-        self.faces = self.mesh.faces.cuda()
+        # create ellipsoid
+        self.ellipsoid = Ellipsoid()
 
         if shared_model is not None:
-            self.cmr = shared_model
+            self.model = shared_model
         else:
-            # create GraphCNN + SMPLRegressor
-            self.cmr = CMR(self.mesh,
-                           num_layers=self.options.model.num_layers,
-                           num_channels=self.options.model.num_channels)
-            self.cmr = torch.nn.DataParallel(self.cmr, device_ids=self.gpus).cuda()
+            self.model = P2MModel(self.options.model.feat_dim,
+                                  self.options.model.hidden,
+                                  self.options.model.coord_dim,
+                                  self.ellipsoid)
+            self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
 
         # Setup a joint optimizer for the 2 models
         self.optimizer = torch.optim.Adam(
-            params=list(self.cmr.parameters()),
+            params=list(self.model.parameters()),
             lr=self.options.optim.lr,
             betas=(self.options.optim.adam_beta1, 0.999),
             weight_decay=self.options.optim.wd)
@@ -42,60 +39,38 @@ class Trainer(CheckpointRunner):
             self.optimizer, self.options.optim.lr_step, self.options.optim.lr_factor
         )
 
-        # SMPL model
-        self.smpl = SMPL().cuda()
-
         # Create loss functions
-        self.criterion = CMRLoss().cuda()
+        self.criterion = P2MLoss(self.ellipsoid).cuda()
 
         # Create AverageMeters for losses
         self.losses = AverageMeter()
 
         # Renderer for visualization
-        self.renderer = Renderer(faces=self.smpl.faces.cpu().detach())
+        # self.renderer = Renderer(faces=self.smpl.faces.cpu().detach())
 
         # Evaluators
-        self.evaluators = [Evaluator(self.options, self.logger, dataset, shared_model=self.cmr)
-                           for dataset in self.options.test.dataset]
+        self.evaluators = []
 
     def models_dict(self):
-        return {'graph_cnn': self.cmr.module.graph_cnn,
-                'smpl_param_regressor': self.cmr.module.smpl_param_regressor}
+        return {'model': self.model}
 
     def optimizers_dict(self):
         return {'optimizer': self.optimizer,
                 'lr_scheduler': self.lr_scheduler}
 
     def train_step(self, input_batch):
-        self.cmr.train()
+        self.model.train()
 
         # Grab data from the batch
-        input_batch = {k: v.cuda() if isinstance(v, torch.Tensor) else v for k, v in input_batch.items()}
-        gt_keypoints_2d, gt_keypoints_3d = input_batch['keypoints'], input_batch['pose_3d']
-        gt_pose, gt_betas = input_batch['pose'], input_batch['betas']
-        has_smpl, has_pose_3d = input_batch['has_smpl'], input_batch['has_pose_3d']
-        images = input_batch['img']
+        images, gt_points, gt_normals = input_batch["images"], input_batch["points"], input_batch["normals"]
 
-        # Render vertices using SMPL parameters
-        gt_vertices = self.smpl(gt_pose, gt_betas)
+        # predict with model
+        pred_pts_list, pred_feats_list, pred_img = self.model(images)
 
-        # Produce vertices, smpl, camera paramters with CMR
-        pred_vertices, pred_vertices_smpl, pred_camera, pred_rotmat, pred_shape = self.cmr(images)
+        # compute loss
+        loss, loss_summary = self.criterion(pred_pts_list, pred_feats_list, gt_points)
 
-        # Get 3D and projected 2D keypoints from the regressed shape
-        pred_keypoints_3d, pred_keypoints_2d = self.smpl.get_keypoints_3d_and_2d(pred_vertices, pred_camera)
-        pred_keypoints_3d_smpl, pred_keypoints_2d_smpl = self.smpl.get_keypoints_3d_and_2d(pred_vertices_smpl,
-                                                                                           pred_camera)
-
-        # Compute loss
-        loss, loss_summary = self.criterion(pred_vertices, pred_vertices_smpl,
-                                            pred_keypoints_3d, pred_keypoints_3d_smpl,
-                                            pred_keypoints_2d, pred_keypoints_2d_smpl,
-                                            pred_rotmat, pred_shape,
-                                            gt_vertices, gt_keypoints_3d, gt_keypoints_2d, gt_pose, gt_betas,
-                                            has_pose_3d, has_smpl)
-
-        self.losses.update(loss.detach().cpu().numpy().item())
+        self.losses.update(loss.detach().cpu().item())
 
         # Do backprop
         self.optimizer.zero_grad()
@@ -103,8 +78,7 @@ class Trainer(CheckpointRunner):
         self.optimizer.step()
 
         # Pack output arguments to be used for visualization in a list
-        out_args = [pred_vertices, pred_vertices_smpl, pred_camera,
-                    pred_keypoints_2d, pred_keypoints_2d_smpl]
+        out_args = [pred_pts_list, pred_feats_list, pred_img]
         out_args = [arg.detach() for arg in out_args]
         loss_summary = {k: v.detach() for k, v in loss_summary.items()}
         out_args.append(loss_summary)
@@ -119,6 +93,11 @@ class Trainer(CheckpointRunner):
 
         # Run training for num_epochs epochs
         for epoch in range(self.epoch_count, self.options.train.num_epochs):
+            self.epoch_count += 1
+
+            # Reset loss
+            self.losses.reset()
+
             # Iterate over all batches in an epoch
             for step, batch in enumerate(train_data_loader):
                 # Run training step

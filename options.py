@@ -10,7 +10,7 @@ from logger import create_logger
 
 options = edict()
 
-options.name = 'graph_cmr'
+options.name = 'p2m'
 options.version = None
 options.num_workers = 4
 options.num_gpus = 1
@@ -21,13 +21,16 @@ options.summary_dir = "summary"
 options.checkpoint_dir = "checkpoints"
 options.checkpoint = None
 
-options.dataset = "itw"
+options.dataset = edict()
+options.dataset.name = "shapenet"
+options.dataset.subset_train = "train_small"
+options.dataset.subset_eval = "test_small"
 
 options.model = edict()
-options.model.name = "graphcnn"
-options.model.num_channels = 256
-options.model.num_layers = 5
-options.model.img_res = 224
+options.model.name = "pixel2mesh"
+options.model.hidden = 192
+options.model.feat_dim = 963
+options.model.coord_dim = 3
 
 options.train = edict()
 options.train.dataset = "all"
@@ -51,8 +54,8 @@ options.test.shuffle = True
 
 options.optim = edict()
 options.optim.adam_beta1 = 0.9
-options.optim.lr = 2.5e-4
-options.optim.wd = 0
+options.optim.lr = 5e-5
+options.optim.wd = 5e-6
 options.optim.lr_step = [140, 180]
 options.optim.lr_factor = 0.1
 
@@ -100,7 +103,7 @@ def gen_options(options_file):
 
 def reset_options(options, args, phase='train'):
     if args.batch_size:
-        options.test.batch_size = args.batch_size
+        options.train.batch_size = options.test.batch_size = args.batch_size
     if hasattr(args, "num_epochs") and args.num_epochs:
         options.train.num_epochs = args.num_epochs
     if hasattr(args, "checkpoint") and args.checkpoint:

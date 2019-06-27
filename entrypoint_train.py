@@ -6,7 +6,7 @@ from options import update_options, options, reset_options
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='GraphCMR Training Entrypoint')
+    parser = argparse.ArgumentParser(description='Pixel2Mesh Training Entrypoint')
     parser.add_argument('--options', help='experiment options file name', required=False, type=str)
 
     args, rest = parser.parse_known_args()

@@ -14,14 +14,13 @@ class GUnpooling(nn.Module):
         super(GUnpooling, self).__init__()
         self.pool_idx = pool_idx
         # save dim info
-        self.in_num = np.max(pool_idx)
+        self.in_num = torch.max(pool_idx).item()
         self.out_num = self.in_num + len(pool_idx)
 
     def forward(self, input):
-
         new_features = input[self.pool_idx].clone()
         new_vertices = 0.5 * new_features.sum(1)
-        output = torch.cat((input, new_vertices), 0)
+        output = torch.cat([input, new_vertices], 0)
 
         return output
 

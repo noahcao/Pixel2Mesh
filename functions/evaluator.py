@@ -9,14 +9,8 @@ from torch.utils.data import DataLoader
 
 import config
 from functions.base import CheckpointRunner
-from models import SMPL, CMR
-from models.geometric_layers import orthographic_projection
 from utils.average_meter import AverageMeter
-from utils.imutils import uncrop
-from utils.mesh import Mesh
-from utils.part_utils import PartRenderer
-from utils.pose_utils import reconstruction_error
-from utils.renderer import Renderer, visualize_batch_recon_and_keypoints
+from utils.mesh import Ellipsoid
 
 
 class Evaluator(CheckpointRunner):
@@ -39,7 +33,7 @@ class Evaluator(CheckpointRunner):
 
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):
-        self.mesh = Mesh()
+        self.mesh = Ellipsoid()
         self.faces = self.mesh.faces.cuda()
 
         if shared_model is not None:

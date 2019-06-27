@@ -13,19 +13,17 @@ class P2MModel(nn.Module):
     Implement the joint model for Pixel2mesh
     """
 
-    def __init__(self, features_dim, hidden_dim, coord_dim, pool_idx, supports):
+    def __init__(self, features_dim, hidden_dim, coord_dim, ellipsoid):
         super(P2MModel, self).__init__()
         self.img_size = 224
 
         self.features_dim = features_dim
         self.hidden_dim = hidden_dim
         self.coord_dim = coord_dim
-        self.pool_idx = pool_idx
-        self.supports = supports
+        self.pool_idx = ellipsoid.pool_idx
+        self.supports = ellipsoid.supports
+        self.init_pts = nn.Parameter(ellipsoid.coord, requires_grad=False)
 
-        self.build()
-
-    def build(self):
         self.nn_encoder = self.build_encoder()
         self.nn_decoder = self.build_decoder()
 
@@ -47,11 +45,11 @@ class P2MModel(nn.Module):
         self.GPL_12 = GUnpooling(self.pool_idx[0])
         self.GPL_22 = GUnpooling(self.pool_idx[1])
 
-    def forward(self, img, input):
+    def forward(self, img):
         img_feats = self.nn_encoder(img)
 
         # GCN Block 1
-        x = self.GPR_0(img_feats, input)
+        x = self.GPR_0(img_feats, self.init_pts)
         x1, x_cat = self.GCN_0(x)
         x1_2 = self.GPL_12(x1)
 
@@ -72,7 +70,7 @@ class P2MModel(nn.Module):
 
         new_img = self.nn_decoder(img_feats)
 
-        return [x1, x2, x3], [input, x1_2, x2_2], new_img
+        return [x1, x2, x3], [self.init_pts, x1_2, x2_2], new_img
 
     def build_encoder(self):
         # VGG16 at first, then try resnet
