@@ -13,7 +13,7 @@ class P2MModel(nn.Module):
     Implement the joint model for Pixel2mesh
     """
 
-    def __init__(self, features_dim, hidden_dim, coord_dim, pool_idx, supports, use_cuda):
+    def __init__(self, features_dim, hidden_dim, coord_dim, pool_idx, supports):
         super(P2MModel, self).__init__()
         self.img_size = 224
 
@@ -22,7 +22,6 @@ class P2MModel(nn.Module):
         self.coord_dim = coord_dim
         self.pool_idx = pool_idx
         self.supports = supports
-        self.use_cuda = use_cuda
 
         self.build()
 
@@ -30,11 +29,11 @@ class P2MModel(nn.Module):
         self.nn_encoder = self.build_encoder()
         self.nn_decoder = self.build_decoder()
 
-        self.GCN_0 = GBottleneck(6, self.features_dim, self.hidden_dim, self.coord_dim, self.supports[0], self.use_cuda)
+        self.GCN_0 = GBottleneck(6, self.features_dim, self.hidden_dim, self.coord_dim, self.supports[0])
         self.GCN_1 = GBottleneck(6, self.features_dim + self.hidden_dim, self.hidden_dim, self.coord_dim,
-                                 self.supports[1], self.use_cuda)
+                                 self.supports[1])
         self.GCN_2 = GBottleneck(6, self.features_dim + self.hidden_dim, self.hidden_dim, self.hidden_dim,
-                                 self.supports[2], self.use_cuda)
+                                 self.supports[2])
 
         self.GPL_1 = GUnpooling(self.pool_idx[0])
         self.GPL_2 = GUnpooling(self.pool_idx[1])
@@ -43,8 +42,7 @@ class P2MModel(nn.Module):
         self.GPR_1 = GProjection()
         self.GPR_2 = GProjection()
 
-        self.GConv = GConv(in_features=self.hidden_dim, out_features=self.coord_dim, adjs=self.supports[2],
-                                      use_cuda=self.use_cuda)
+        self.GConv = GConv(in_features=self.hidden_dim, out_features=self.coord_dim, adjs=self.supports[2])
 
         self.GPL_12 = GUnpooling(self.pool_idx[0])
         self.GPL_22 = GUnpooling(self.pool_idx[1])
