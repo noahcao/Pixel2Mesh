@@ -45,7 +45,8 @@ class CheckpointRunner(object):
 
     def load_dataset(self, dataset, training):
         if dataset.name == "shapenet":
-            return ShapeNet(config.SHAPENET_ROOT, dataset.subset_train if training else dataset.subset_eval)
+            return ShapeNet(config.SHAPENET_ROOT, dataset.subset_train if training else dataset.subset_eval,
+                            self.options.dataset.shapenet.num_points)
         raise NotImplementedError("Unsupported dataset")
 
     def init_fn(self, shared_model=None, **kwargs):

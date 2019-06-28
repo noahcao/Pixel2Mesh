@@ -1,4 +1,5 @@
 train:
   test_steps: 100
+  summary_steps: 5
 test:
-  summary_steps: 50
+  summary_steps: 5

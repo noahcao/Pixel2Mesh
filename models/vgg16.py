@@ -1,7 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision import models
 
+import config
+
+models.VGG
 
 class VGG16P2M(nn.Module):
 
@@ -45,23 +49,23 @@ class VGG16P2M(nn.Module):
         img = F.relu(self.conv2_1(img))
         img = F.relu(self.conv2_2(img))
         img = F.relu(self.conv2_3(img))
-        img2 = torch.squeeze(img)  # 56
+        img2 = img
 
         img = F.relu(self.conv3_1(img))
         img = F.relu(self.conv3_2(img))
         img = F.relu(self.conv3_3(img))
-        img3 = torch.squeeze(img)  # 28
+        img3 = img
 
         img = F.relu(self.conv4_1(img))
         img = F.relu(self.conv4_2(img))
         img = F.relu(self.conv4_3(img))
-        img4 = torch.squeeze(img)  # 14
+        img4 = img
 
         img = F.relu(self.conv5_1(img))
         img = F.relu(self.conv5_2(img))
         img = F.relu(self.conv5_3(img))
         img = F.relu(self.conv5_4(img))
-        img5 = torch.squeeze(img)  # 7
+        img5 = img
 
         return [img2, img3, img4, img5]
 
@@ -78,12 +82,12 @@ class VGG16Decoder(nn.Module):
         self.conv_5 = nn.ConvTranspose2d(32, image_channel, kernel_size=6, stride=2, padding=2)  # 112 -> 224
 
     def forward(self, img_feats):
-        x = F.relu(self.conv_1(img_feats[-1].unsqueeze(0)))
-        x = torch.cat((x, img_feats[-2].unsqueeze(0)), dim=1)
+        x = F.relu(self.conv_1(img_feats[-1]))
+        x = torch.cat((x, img_feats[-2]), dim=1)
         x = F.relu(self.conv_2(x))
-        x = torch.cat((x, img_feats[-3].unsqueeze(0)), dim=1)
+        x = torch.cat((x, img_feats[-3]), dim=1)
         x = F.relu(self.conv_3(x))
-        x = torch.cat((x, img_feats[-4].unsqueeze(0)), dim=1)
+        x = torch.cat((x, img_feats[-4]), dim=1)
         x = F.relu(self.conv_4(x))
         x = F.relu(self.conv_5(x))
 

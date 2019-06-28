@@ -26,10 +26,12 @@ options.dataset.name = "shapenet"
 options.dataset.subset_train = "train_small"
 options.dataset.subset_eval = "test_small"
 
+options.dataset.shapenet = edict()
+options.dataset.shapenet.num_points = 3000
+
 options.model = edict()
 options.model.name = "pixel2mesh"
 options.model.hidden = 192
-options.model.feat_dim = 963
 options.model.coord_dim = 3
 
 options.train = edict()

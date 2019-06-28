@@ -18,9 +18,9 @@ class GUnpooling(nn.Module):
         self.out_num = self.in_num + len(unpool_idx)
 
     def forward(self, inputs):
-        new_features = inputs[self.unpool_idx].clone()
-        new_vertices = 0.5 * new_features.sum(1)
-        output = torch.cat([inputs, new_vertices], 0)
+        new_features = inputs[:, self.unpool_idx].clone()
+        new_vertices = 0.5 * new_features.sum(2)
+        output = torch.cat([inputs, new_vertices], 1)
 
         return output
 

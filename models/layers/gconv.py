@@ -3,14 +3,7 @@ import math
 import torch
 import torch.nn as nn
 
-
-def dot(x, y, sparse=False):
-    """Wrapper for torch.matmul (sparse vs dense)."""
-    if sparse:
-        res = x.mm(y)
-    else:
-        res = torch.matmul(x, y)
-    return res
+from utils.tensor import dot
 
 
 class GConv(nn.Module):
@@ -25,9 +18,9 @@ class GConv(nn.Module):
         self.out_features = out_features
 
         self.adj_mat = nn.Parameter(adj_mat, requires_grad=False)
-        self.weight = nn.Parameter(torch.zeros((in_features, out_features), dtype=torch.float32))
+        self.weight = nn.Parameter(torch.zeros((in_features, out_features), dtype=torch.float))
         if bias:
-            self.bias = nn.Parameter(torch.zeros((out_features,), dtype=torch.float32))
+            self.bias = nn.Parameter(torch.zeros((out_features,), dtype=torch.float))
         else:
             self.register_parameter('bias', None)
         self.reset_parameters()

@@ -24,8 +24,7 @@ class Trainer(CheckpointRunner):
         if shared_model is not None:
             self.model = shared_model
         else:
-            self.model = P2MModel(self.options.model.feat_dim,
-                                  self.options.model.hidden,
+            self.model = P2MModel(self.options.model.hidden,
                                   self.options.model.coord_dim,
                                   self.ellipsoid)
             self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
@@ -83,7 +82,7 @@ class Trainer(CheckpointRunner):
 
     def train(self):
         train_data_loader = DataLoader(self.dataset,
-                                       batch_size=1,  # TODO increase batch size
+                                       batch_size=self.options.train.batch_size * self.options.num_gpus,
                                        num_workers=self.options.num_workers,
                                        pin_memory=self.options.pin_memory,
                                        shuffle=self.options.train.shuffle)

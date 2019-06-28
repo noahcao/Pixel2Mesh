@@ -37,10 +37,7 @@ class Ellipsoid(object):
         for i in range(3):
             self.edges.append(torch.tensor(fp_info[1 + i][1][0], dtype=torch.long))
             self.faces.append(torch.tensor(fp_info[5][i], dtype=torch.long))
-            lap_idx_curr = fp_info[7][i]
-            idx = lap_idx_curr.shape[0]
-            np.place(lap_idx_curr, lap_idx_curr == -1, idx)
-            self.laplace_idx.append(torch.tensor(lap_idx_curr, dtype=torch.long))
+            self.laplace_idx.append(torch.tensor(fp_info[7][i], dtype=torch.long))
 
         # unpool index
         # num_pool_edges * 2

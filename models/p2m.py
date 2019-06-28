@@ -5,6 +5,7 @@ from models.gbottleneck import GBottleneck
 from models.layers.gconv import GConv
 from models.layers.gpooling import GUnpooling
 from models.layers.gprojection import GProjection
+from models.resnet import resnet50
 from models.vgg16 import VGG16P2M, VGG16Decoder
 
 
@@ -13,17 +14,16 @@ class P2MModel(nn.Module):
     Implement the joint model for Pixel2mesh
     """
 
-    def __init__(self, features_dim, hidden_dim, coord_dim, ellipsoid):
+    def __init__(self, hidden_dim, coord_dim, ellipsoid):
         super(P2MModel, self).__init__()
         self.img_size = 224
 
-        self.features_dim = features_dim
         self.hidden_dim = hidden_dim
         self.coord_dim = coord_dim
         self.init_pts = nn.Parameter(ellipsoid.coord, requires_grad=False)
 
-        self.nn_encoder = self.build_encoder()
-        self.nn_decoder = self.build_decoder()
+        self.nn_encoder = resnet50()
+        self.features_dim = self.nn_encoder.features_dim + self.coord_dim
 
         self.gcns = nn.ModuleList([
             GBottleneck(6, self.features_dim, self.hidden_dim, self.coord_dim,
@@ -45,10 +45,12 @@ class P2MModel(nn.Module):
                            adj_mat=ellipsoid.adj_mat[2])
 
     def forward(self, img):
+        batch_size = img.size(0)
         img_feats = self.nn_encoder(img)
 
+        init_pts = self.init_pts.data.unsqueeze(0).expand(batch_size, -1, -1)
         # GCN Block 1
-        x = self.projection(img_feats, self.init_pts.data)
+        x = self.projection(img_feats, init_pts)
         x1, x_hidden = self.gcns[0](x)
 
         # before deformation 2
@@ -56,7 +58,7 @@ class P2MModel(nn.Module):
 
         # GCN Block 2
         x = self.projection(img_feats, x1)
-        x = self.unpooling[0](torch.cat([x, x_hidden], 1))
+        x = self.unpooling[0](torch.cat([x, x_hidden], 2))
         # after deformation 2
         x2, x_hidden = self.gcns[1](x)
 
@@ -65,17 +67,14 @@ class P2MModel(nn.Module):
 
         # GCN Block 3
         x = self.projection(img_feats, x2)
-        x = self.unpooling[1](torch.cat([x, x_hidden], 1))
+        x = self.unpooling[1](torch.cat([x, x_hidden], 2))
         x3, _ = self.gcns[2](x)
         # after deformation 3
         x3 = self.gconv(x3)
 
-        img_recons = self.nn_decoder(img_feats)
-
         return {
             "pred_coord": [x1, x2, x3],
-            "pred_coord_before_deform": [self.init_pts.data, x1_up, x2_up],
-            "img_recons": img_recons
+            "pred_coord_before_deform": [init_pts, x1_up, x2_up],
         }
 
     def build_encoder(self):
