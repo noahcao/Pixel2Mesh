@@ -12,7 +12,7 @@ options = edict()
 
 options.name = 'p2m'
 options.version = None
-options.num_workers = 4
+options.num_workers = 1
 options.num_gpus = 1
 options.pin_memory = True
 

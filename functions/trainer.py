@@ -11,6 +11,7 @@ from models.losses.p2m import P2MLoss
 from models.p2m import P2MModel
 from utils.average_meter import AverageMeter
 from utils.mesh import Ellipsoid
+from utils.tensor import recursive_detach
 
 
 class Trainer(CheckpointRunner):
@@ -62,13 +63,13 @@ class Trainer(CheckpointRunner):
         self.model.train()
 
         # Grab data from the batch
-        images, gt_points, gt_normals = input_batch["images"], input_batch["points"], input_batch["normals"]
+        images = input_batch["images"]
 
         # predict with model
-        pred_pts_list, pred_feats_list, pred_img = self.model(images)
+        out = self.model(images)
 
         # compute loss
-        loss, loss_summary = self.criterion(pred_pts_list, pred_feats_list, gt_points)
+        loss, loss_summary = self.criterion(out, input_batch)
 
         self.losses.update(loss.detach().cpu().item())
 
@@ -77,16 +78,12 @@ class Trainer(CheckpointRunner):
         loss.backward()
         self.optimizer.step()
 
-        # Pack output arguments to be used for visualization in a list
-        out_args = [pred_pts_list, pred_feats_list, pred_img]
-        out_args = [arg.detach() for arg in out_args]
-        loss_summary = {k: v.detach() for k, v in loss_summary.items()}
-        out_args.append(loss_summary)
-        return out_args
+        # Pack output arguments to be used for visualization
+        return recursive_detach(out), recursive_detach(loss_summary)
 
     def train(self):
         train_data_loader = DataLoader(self.dataset,
-                                       batch_size=self.options.train.batch_size * self.options.num_gpus,
+                                       batch_size=1,  # TODO increase batch size
                                        num_workers=self.options.num_workers,
                                        pin_memory=self.options.pin_memory,
                                        shuffle=self.options.train.shuffle)
@@ -123,19 +120,15 @@ class Trainer(CheckpointRunner):
             # lr scheduler step
             self.lr_scheduler.step()
 
-    def train_summaries(self, input_batch,
-                        pred_vertices, pred_vertices_smpl, pred_camera,
-                        pred_keypoints_2d, pred_keypoints_2d_smpl, loss_summary):
+    def train_summaries(self, input_batch, out_summary, loss_summary):
         # Do visualization for the first 4 images of the batch
-        rend_imgs, rend_imgs_smpl = visualize_batch_recon_and_keypoints(4, self.renderer, input_batch["img_orig"],
-                                                                        pred_vertices, pred_vertices_smpl,
-                                                                        pred_camera, pred_keypoints_2d,
-                                                                        pred_keypoints_2d_smpl,
-                                                                        input_batch['keypoints'])
+        # rend_imgs, rend_imgs_smpl = visualize_batch_recon_and_keypoints(4, self.renderer, input_batch["img_orig"],
+        #                                                                 pred_vertices, pred_vertices_smpl,
+        #                                                                 pred_camera, pred_keypoints_2d,
+        #                                                                 pred_keypoints_2d_smpl,
+        #                                                                 input_batch['keypoints'])
 
         # Save results in Tensorboard
-        self.summary_writer.add_image('imgs', rend_imgs, self.step_count)
-        self.summary_writer.add_image('imgs_smpl', rend_imgs_smpl, self.step_count)
         for k, v in loss_summary.items():
             self.summary_writer.add_scalar(k, v, self.step_count)
 

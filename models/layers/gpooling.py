@@ -10,17 +10,17 @@ class GUnpooling(nn.Module):
     Three middle points are connected in each triangle.
     """
 
-    def __init__(self, pool_idx):
+    def __init__(self, unpool_idx):
         super(GUnpooling, self).__init__()
-        self.pool_idx = pool_idx
+        self.unpool_idx = unpool_idx
         # save dim info
-        self.in_num = torch.max(pool_idx).item()
-        self.out_num = self.in_num + len(pool_idx)
+        self.in_num = torch.max(unpool_idx).item()
+        self.out_num = self.in_num + len(unpool_idx)
 
-    def forward(self, input):
-        new_features = input[self.pool_idx].clone()
+    def forward(self, inputs):
+        new_features = inputs[self.unpool_idx].clone()
         new_vertices = 0.5 * new_features.sum(1)
-        output = torch.cat([input, new_vertices], 0)
+        output = torch.cat([inputs, new_vertices], 0)
 
         return output
 

@@ -1,24 +1,10 @@
 import math
 
-import numpy as np
 import torch
 import torch.nn as nn
-from scipy.sparse import coo_matrix
 
 
-def torch_sparse_tensor(indice, value, size):
-    coo = coo_matrix((value, (indice[:, 0], indice[:, 1])), shape = size)
-    values = coo.data
-    indices = np.vstack((coo.row, coo.col))
-
-    i = torch.tensor(indices, dtype=torch.long)
-    v = torch.tensor(values, dtype=torch.float32)
-    shape = coo.shape
-
-    return torch.sparse.FloatTensor(i, v, shape)
-
-
-def dot(x, y, sparse = False):
+def dot(x, y, sparse=False):
     """Wrapper for torch.matmul (sparse vs dense)."""
     if sparse:
         res = x.mm(y)
@@ -33,18 +19,15 @@ class GConv(nn.Module):
     Similar to https://arxiv.org/abs/1609.02907
     """
 
-    def __init__(self, in_features, out_features, adjs, bias=True):
+    def __init__(self, in_features, out_features, adj_mat, bias=True):
         super(GConv, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
 
-        adj0 = torch_sparse_tensor(*adjs[0])
-        adj1 = torch_sparse_tensor(*adjs[1])
-        self.adjs = [adj0, adj1]
-
+        self.adj_mat = nn.Parameter(adj_mat, requires_grad=False)
         self.weight = nn.Parameter(torch.zeros((in_features, out_features), dtype=torch.float32))
         if bias:
-            self.bias = nn.Parameter(torch.zeros((out_features, ), dtype=torch.float32))
+            self.bias = nn.Parameter(torch.zeros((out_features,), dtype=torch.float32))
         else:
             self.register_parameter('bias', None)
         self.reset_parameters()
@@ -55,12 +38,9 @@ class GConv(nn.Module):
         if self.bias is not None:
             self.bias.data.uniform_(-stdv, stdv)
 
-    def forward(self, input):
-        support = torch.matmul(input, self.weight)
-        # output = torch.spmm(adj, support)
-        output1 = dot(self.adjs[0], support, True)
-        output2 = dot(self.adjs[1], support, True)
-        output = output1 + output2
+    def forward(self, inputs):
+        support = torch.matmul(inputs, self.weight)
+        output = dot(self.adj_mat, support, True)
         if self.bias is not None:
             return output + self.bias
         else:
