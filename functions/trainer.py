@@ -12,6 +12,7 @@ from models.p2m import P2MModel
 from utils.average_meter import AverageMeter
 from utils.mesh import Ellipsoid
 from utils.tensor import recursive_detach
+from utils.vis.renderer import p2m_batch_visualize
 
 
 class Trainer(CheckpointRunner):
@@ -120,12 +121,9 @@ class Trainer(CheckpointRunner):
             self.lr_scheduler.step()
 
     def train_summaries(self, input_batch, out_summary, loss_summary):
-        # Do visualization for the first 4 images of the batch
-        # rend_imgs, rend_imgs_smpl = visualize_batch_recon_and_keypoints(4, self.renderer, input_batch["img_orig"],
-        #                                                                 pred_vertices, pred_vertices_smpl,
-        #                                                                 pred_camera, pred_keypoints_2d,
-        #                                                                 pred_keypoints_2d_smpl,
-        #                                                                 input_batch['keypoints'])
+        # Do visualization for the first 2 images of the batch
+        render_mesh = p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)
+        self.summary_writer.add_image("render_mesh", render_mesh, self.step_count)
 
         # Save results in Tensorboard
         for k, v in loss_summary.items():

@@ -1,7 +1,9 @@
+import os
 import pickle
 
 import numpy as np
 import torch
+import trimesh
 from scipy.sparse import coo_matrix
 
 import config
@@ -32,11 +34,10 @@ class Ellipsoid(object):
         # edge: num_edges * 2
         # faces: num_faces * 4
         # laplace_idx: num_pts * 10
-        self.edges, self.faces, self.laplace_idx = [], [], []
+        self.edges, self.laplace_idx = [], []
 
         for i in range(3):
             self.edges.append(torch.tensor(fp_info[1 + i][1][0], dtype=torch.long))
-            self.faces.append(torch.tensor(fp_info[5][i], dtype=torch.long))
             self.laplace_idx.append(torch.tensor(fp_info[7][i], dtype=torch.long))
 
         # unpool index
@@ -54,3 +55,17 @@ class Ellipsoid(object):
             adj_mat = torch_sparse_tensor(*fp_info[i][1])
             adj_mat += adj_loops
             self.adj_mat.append(adj_mat)
+
+        ellipsoid_dir = os.path.dirname(file)
+        self.faces = []
+        # faces: f * 3, original ellipsoid, and two after deformations
+        for i in range(1, 4):
+            face_file = os.path.join(ellipsoid_dir, "face%d.obj" % i)
+            faces = []
+            with open(face_file, "r") as f:
+                for line in f.readlines():
+                    t, *arr = line.strip().split()
+                    arr = list(map(lambda x: int(x) - 1, arr))
+                    assert t == "f"
+                    faces.append(arr)
+            self.faces.append(torch.tensor(faces))

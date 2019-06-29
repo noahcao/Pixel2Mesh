@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import config
+
 
 class GProjection(nn.Module):
     """Graph Projection layer, which pool 2D features to mesh
@@ -15,12 +17,13 @@ class GProjection(nn.Module):
 
     def forward(self, img_features, inputs):
         # map to [-1, 1]
-        h = (248 * (inputs[:, :, 1] / inputs[:, :, 2])) / 111.5
-        w = (-248 * (inputs[:, :, 0] / inputs[:, :, 2])) / 111.5
+        # not sure why here is a negative sign
+        w = (-config.CAMERA_F[0] * (inputs[:, :, 0] / inputs[:, :, 2])) / config.CAMERA_C[0]
+        h = (config.CAMERA_F[1] * (inputs[:, :, 1] / inputs[:, :, 2])) / config.CAMERA_C[1]
 
         # clamp to [-1, 1]
-        h = torch.clamp(h, min=-1, max=1)
         w = torch.clamp(w, min=-1, max=1)
+        h = torch.clamp(h, min=-1, max=1)
 
         feats = [inputs]
         for i in range(4):

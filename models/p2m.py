@@ -16,7 +16,6 @@ class P2MModel(nn.Module):
 
     def __init__(self, hidden_dim, coord_dim, ellipsoid):
         super(P2MModel, self).__init__()
-        self.img_size = 224
 
         self.hidden_dim = hidden_dim
         self.coord_dim = coord_dim

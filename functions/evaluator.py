@@ -1,3 +1,7 @@
+"""
+Evaluator template, not yet implemented
+"""
+
 import os
 from logging import Logger
 
