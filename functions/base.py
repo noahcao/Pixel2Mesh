@@ -92,6 +92,9 @@ class CheckpointRunner(object):
                 checkpoint[model_name] = model.module.state_dict()
             else:
                 checkpoint[model_name] = model.state_dict()
+            for k, v in list(checkpoint[model_name].items()):
+                if isinstance(v, torch.Tensor) and v.is_sparse:
+                    checkpoint[model_name].pop(k)
         if self.optimizers_dict() is not None:
             for optimizer_name, optimizer in self.optimizers_dict().items():
                 checkpoint[optimizer_name] = optimizer.state_dict()
