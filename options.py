@@ -35,7 +35,6 @@ options.model.hidden = 192
 options.model.coord_dim = 3
 
 options.train = edict()
-options.train.dataset = "all"
 options.train.num_epochs = 200
 options.train.batch_size = 4
 options.train.summary_steps = 50
@@ -49,7 +48,7 @@ options.train.use_augmentation_rgb = True
 options.train.shuffle = True
 
 options.test = edict()
-options.test.dataset = ["h36m-p1", "h36m-p2", "up-3d", "lsp"]
+options.test.dataset = []
 options.test.summary_steps = 50
 options.test.batch_size = 4
 options.test.shuffle = True

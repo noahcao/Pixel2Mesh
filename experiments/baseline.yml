@@ -1,0 +1,5 @@
+num_gpus: 8
+optim:
+  lr: 2.5e-4
+train:
+  batch_size: 8

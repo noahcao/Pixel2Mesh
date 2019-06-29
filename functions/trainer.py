@@ -46,9 +46,6 @@ class Trainer(CheckpointRunner):
         # Create AverageMeters for losses
         self.losses = AverageMeter()
 
-        # Renderer for visualization
-        # self.renderer = Renderer(faces=self.smpl.faces.cpu().detach())
-
         # Evaluators
         self.evaluators = []
 
