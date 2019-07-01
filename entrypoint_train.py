@@ -28,9 +28,9 @@ def parse_args():
 
 def main():
     args = parse_args()
-    logger = reset_options(options, args)
+    logger, writer = reset_options(options, args)
 
-    trainer = Trainer(options, logger)
+    trainer = Trainer(options, logger, writer)
     trainer.train()
 
 

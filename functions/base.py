@@ -11,7 +11,8 @@ from functions.saver import CheckpointSaver
 
 
 class CheckpointRunner(object):
-    def __init__(self, options, logger: Logger, dataset=None, training=True, shared_model=None):
+    def __init__(self, options, logger: Logger, summary_writer: SummaryWriter,
+                 dataset=None, training=True, shared_model=None):
         self.options = options
         self.logger = logger
 
@@ -21,7 +22,7 @@ class CheckpointRunner(object):
         self.gpus = list(range(self.options.num_gpus))
 
         # initialize summary writer
-        self.summary_writer = SummaryWriter(options.summary_dir)
+        self.summary_writer = summary_writer
 
         # initialize dataset
         if dataset is None:

@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 import yaml
 from easydict import EasyDict as edict
+from tensorboardX import SummaryWriter
 
 from logger import create_logger
 
@@ -135,4 +136,7 @@ def reset_options(options, args, phase='train'):
     logger = create_logger(options, phase=phase)
     logger.info(pprint.pformat(vars(options)))
 
-    return logger
+    print('=> creating summary writer')
+    writer = SummaryWriter(options.summary_dir)
+
+    return logger, writer
