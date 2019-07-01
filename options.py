@@ -34,6 +34,12 @@ options.model.name = "pixel2mesh"
 options.model.hidden = 192
 options.model.coord_dim = 3
 
+options.loss = edict()
+options.loss.weights = edict()
+options.loss.weights.normal = 1.
+options.loss.weights.edge = 1.
+options.loss.weights.laplace = 1.
+
 options.train = edict()
 options.train.num_epochs = 200
 options.train.batch_size = 4

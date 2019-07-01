@@ -41,7 +41,7 @@ class Trainer(CheckpointRunner):
         )
 
         # Create loss functions
-        self.criterion = P2MLoss(self.ellipsoid).cuda()
+        self.criterion = P2MLoss(self.options, self.ellipsoid).cuda()
 
         # Create AverageMeters for losses
         self.losses = AverageMeter()
@@ -94,6 +94,9 @@ class Trainer(CheckpointRunner):
 
             # Iterate over all batches in an epoch
             for step, batch in enumerate(train_data_loader):
+                # Send input to GPU
+                batch = {k: v.cuda() for k, v in batch.items() if isinstance(v, torch.Tensor)}
+
                 # Run training step
                 out = self.train_step(batch)
 
