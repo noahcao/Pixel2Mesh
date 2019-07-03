@@ -6,13 +6,12 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from functions.base import CheckpointRunner
-from functions.evaluator import Evaluator
 from models.losses.p2m import P2MLoss
 from models.p2m import P2MModel
 from utils.average_meter import AverageMeter
 from utils.mesh import Ellipsoid
 from utils.tensor import recursive_detach
-from utils.vis.renderer import p2m_batch_visualize
+from utils.vis.renderer import MeshRenderer
 
 
 class Trainer(CheckpointRunner):
@@ -45,6 +44,9 @@ class Trainer(CheckpointRunner):
 
         # Create AverageMeters for losses
         self.losses = AverageMeter()
+
+        # Visualization renderer
+        self.renderer = MeshRenderer()
 
         # Evaluators
         self.evaluators = []
@@ -122,7 +124,7 @@ class Trainer(CheckpointRunner):
 
     def train_summaries(self, input_batch, out_summary, loss_summary):
         # Do visualization for the first 2 images of the batch
-        render_mesh = p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)
+        render_mesh = self.renderer.p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)
         self.summary_writer.add_image("render_mesh", render_mesh, self.step_count)
 
         # Save results in Tensorboard

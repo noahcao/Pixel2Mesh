@@ -1,68 +1,116 @@
+import cv2
+import neural_renderer as nr
 import numpy as np
-import pyrender
 import torch
-import trimesh
-from pyrender import RenderFlags
 
 import config
 
 
-# init a global renderer to bypass the problem with multiple renderers
-global_renderer = pyrender.OffscreenRenderer(config.CAMERA_RES[0], config.CAMERA_RES[1])
+class MeshRenderer(object):
 
+    def __init__(self):
+        self.colors = {'pink': np.array([.9, .7, .7]),
+                       'light_blue': np.array([0.65098039, 0.74117647, 0.85882353])
+                       }
+        self.renderer = nr.Renderer(camera_mode='projection',
+                                    light_intensity_directional=1,
+                                    light_intensity_ambient=.5,
+                                    background_color=[1., 1., 1.])
 
-def render_pyrender_mesh(mesh, point_size=1.):
-    scene = pyrender.Scene(ambient_light=[.03, .03, .03],
-                           bg_color=[0., 0., 0., 0.])
-    scene.add(mesh)
-    camera = pyrender.IntrinsicsCamera(fx=config.CAMERA_F[0], fy=config.CAMERA_F[1],
-                                       cx=config.CAMERA_C[0], cy=config.CAMERA_C[1])
-    camera_pose = np.eye(4)
-    scene.add(camera, pose=camera_pose)
-    light = pyrender.SpotLight(color=np.ones(3), intensity=3.0,
-                               innerConeAngle=np.pi / 16.0,
-                               outerConeAngle=np.pi / 6.0)
-    scene.add(light, pose=camera_pose)
-    global_renderer.point_size = point_size
-    color, depth = global_renderer.render(scene, flags=RenderFlags.RGBA)
-    return color
+    def _mix_render_result_with_image(self, rgb, alpha, image):
+        alpha = np.expand_dims(alpha, 0)
+        return alpha * rgb + (1 - alpha) * image
 
+    def _process_render_result(self, img, height, width):
+        if isinstance(img, torch.Tensor):
+            img = img.cpu().numpy()
+        if img.ndim == 2:
+            # assuming single channel image
+            img = np.expand_dims(img, axis=0)
+        if img.shape[-1] == 3:
+            # assuming [height, width, rgb]
+            img = np.moveaxis(img, -1, 0)
+        # return 3 * width * height or width * height, in range [0, 1]
+        return np.clip(img[:height, :width], 0, 1)
 
-def mix_render_result_with_image(image, result):
-    result = result / 255.
-    alpha = np.expand_dims(result[:, :, 3], 0)
-    return alpha * np.moveaxis(result[:, :, :3], -1, 0) + image * (1 - alpha)
+    def _render_mesh(self, vertices: np.ndarray, faces: np.ndarray, width, height,
+                     camera_k, camera_dist_coeffs, rvec, tvec, color=None):
+        # render a square image, then crop
+        img_size = max(height, width)
 
+        # This is not thread safe!
+        self.renderer.image_size = img_size
 
-def render_mesh(coord, faces, image):
-    mesh = trimesh.Trimesh(coord, faces)
-    res = render_pyrender_mesh(pyrender.Mesh.from_trimesh(mesh))
-    return mix_render_result_with_image(image, res)
+        vertices = torch.tensor(vertices, dtype=torch.float32)
+        faces = torch.tensor(faces, dtype=torch.int32)
 
+        color = self.colors[color or 'light_blue']
+        texture_size = 2
+        textures = torch.tensor(color, dtype=torch.float32) \
+            .repeat(faces.size(0), texture_size, texture_size, texture_size, 1)
 
-def render_pointcloud(coord, image):
-    res = render_pyrender_mesh(pyrender.Mesh.from_points(coord), point_size=3.)
-    return mix_render_result_with_image(image, res)
+        camera_k = torch.tensor(camera_k, dtype=torch.float32)
+        rotmat = torch.tensor(cv2.Rodrigues(rvec)[0], dtype=torch.float32)
+        tvec = torch.tensor(tvec, dtype=torch.float32)
+        camera_dist_coeffs = torch.tensor(camera_dist_coeffs, dtype=torch.float32)
 
+        rgb, _, alpha = self.renderer.render(vertices.unsqueeze(0).cuda(),
+                                             faces.unsqueeze(0).cuda(),
+                                             textures.unsqueeze(0).cuda(),
+                                             K=camera_k.unsqueeze(0).cuda(),
+                                             R=rotmat.unsqueeze(0).cuda(),
+                                             t=tvec.unsqueeze(0).cuda(),
+                                             dist_coeffs=camera_dist_coeffs.unsqueeze(0).cuda(),
+                                             orig_size=img_size)
+        # use the extra dimension of alpha for broadcasting
+        alpha = self._process_render_result(alpha[0], height, width)
+        rgb = self._process_render_result(rgb[0], height, width)
 
-def visualize_reconstruction(gt_coord, coord, faces, image):
-    gt_pointcloud = render_pointcloud(gt_coord, image)
-    pointcloud = render_pointcloud(coord, image)
-    mesh = render_mesh(coord, faces, image)
-    return np.concatenate((image, gt_pointcloud, pointcloud, mesh), 2)
+        return rgb, alpha
 
+    def _render_pointcloud(self, vertices: np.ndarray, width, height,
+                           camera_k, camera_dist_coeffs, rvec, tvec, color=None):
+        color = self.colors[color or 'pink']
 
-def p2m_batch_visualize(batch_input, batch_output, faces, atmost=2):
-    """
-    Every thing is tensor for now, needs to move to cpu and convert to numpy
-    """
-    batch_size = min(batch_input["images"].size(0), atmost)
-    images_stack = []
-    for i in range(batch_size):
-        image = batch_input["images"][i].cpu().numpy()
-        gt_points = batch_input["points"][i].cpu().numpy()
-        for j in range(3):
-            for k in ["pred_coord_before_deform", "pred_coord"]:
-                coord = batch_output[k][j][i].cpu().numpy()
-                images_stack.append(visualize_reconstruction(gt_points, coord, faces[j].cpu().numpy(), image))
-    return torch.from_numpy(np.concatenate(images_stack, 1))
+        # return pointcloud
+        vertices_2d = cv2.projectPoints(np.expand_dims(vertices, -1),
+                                        rvec, tvec, camera_k, camera_dist_coeffs)[0]
+        vertices_2d = np.reshape(vertices_2d, (-1, 2))
+        alpha = np.zeros((height, width, 3), np.float)
+        for x, y in vertices_2d:
+            cv2.circle(alpha, (x, y), radius=1, color=(1., 1., 1.), thickness=-1)
+        rgb = self._process_render_result(alpha * color[None, None, :], height, width)
+        alpha = self._process_render_result(alpha[:, :, 0], height, width)
+        whiteboard = np.ones((3, height, width), np.float)
+        rgb = self._mix_render_result_with_image(rgb, alpha[0], whiteboard)
+        return rgb, alpha
+
+    def visualize_reconstruction(self, gt_coord, coord, faces, image):
+        camera_k = np.array([[config.CAMERA_F[0], 0, config.CAMERA_C[0]],
+                             [0, config.CAMERA_F[1], config.CAMERA_C[1]],
+                             [0, 0, 1]])
+        rvec = np.zeros(3, dtype=np.float32)
+        tvec = np.zeros(3, dtype=np.float32)
+        dist_coeffs = np.zeros(5, dtype=np.float32)
+        gt_pc, _ = self._render_pointcloud(gt_coord, image.shape[2], image.shape[1],
+                                           camera_k, dist_coeffs, rvec, tvec)
+        pred_pc, _ = self._render_pointcloud(coord, image.shape[2], image.shape[1],
+                                             camera_k, dist_coeffs, rvec, tvec)
+        mesh, _ = self._render_mesh(coord, faces, image.shape[2], image.shape[1],
+                                    camera_k, dist_coeffs, rvec, tvec)
+        return np.concatenate((image, gt_pc, pred_pc, mesh), 2)
+
+    def p2m_batch_visualize(self, batch_input, batch_output, faces, atmost=2):
+        """
+        Every thing is tensor for now, needs to move to cpu and convert to numpy
+        """
+        batch_size = min(batch_input["images"].size(0), atmost)
+        images_stack = []
+        for i in range(batch_size):
+            image = batch_input["images"][i].cpu().numpy()
+            gt_points = batch_input["points"][i].cpu().numpy()
+            for j in range(3):
+                for k in ["pred_coord_before_deform", "pred_coord"]:
+                    coord = batch_output[k][j][i].cpu().numpy()
+                    images_stack.append(self.visualize_reconstruction(gt_points, coord, faces[j].cpu().numpy(), image))
+        return torch.from_numpy(np.concatenate(images_stack, 1))

@@ -19,7 +19,7 @@ from utils.mesh import Ellipsoid
 
 class Evaluator(CheckpointRunner):
 
-    def __init__(self, options, logger: Logger, dataset, shared_model=None):
+    def __init__(self, options, logger: Logger, writer, dataset, shared_model=None):
         self.annot_path = None
         self.eval_pose = self.eval_shape = self.eval_masks = self.eval_parts = False
         if dataset == 'h36m-p1' or dataset == 'h36m-p2':
@@ -33,7 +33,7 @@ class Evaluator(CheckpointRunner):
         else:
             raise ValueError("Unsupported Dataset")
         self.dataset_name = dataset
-        super().__init__(options, logger, dataset=dataset, training=False, shared_model=shared_model)
+        super().__init__(options, logger, writer, dataset=dataset, training=False, shared_model=shared_model)
 
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):

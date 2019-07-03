@@ -1,0 +1,3 @@
+[submodule "external/neural_renderer"]
+	path = external/neural_renderer
+	url = https://github.com/daniilidis-group/neural_renderer
