@@ -11,11 +11,20 @@
 
 ## Environment Preparation
 
-```
-conda env create -f env.yml
-```
+Basically, you will need:
 
-In `external/chamfer` do:
+* Python 3.5+
+* PyTorch 1.1+
+* Cuda 9.0+
+* OpenCV
+* Scikit Image
+* EasyDict
+* PyYAML
+* TensorboardX
+
+Note that this is not guaranteed to be a complete list of dependencies.
+
+In `external/chamfer` and `external/neural_renderer` do:
 
 ```
 python setup.py install
