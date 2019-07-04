@@ -1,4 +1,5 @@
 train:
+  batch_size: 2
   test_steps: 100
   summary_steps: 1
 test:

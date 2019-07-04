@@ -5,6 +5,6 @@ loss:
   weights:
     normal: 1.6e-4
     laplace: 0.3
-    edge: 0.1
+    edge: 5e-2
 train:
   batch_size: 8

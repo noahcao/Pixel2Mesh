@@ -89,7 +89,8 @@ class MeshRenderer(object):
         camera_k = np.array([[config.CAMERA_F[0], 0, config.CAMERA_C[0]],
                              [0, config.CAMERA_F[1], config.CAMERA_C[1]],
                              [0, 0, 1]])
-        rvec = np.zeros(3, dtype=np.float32)
+        # inverse y and z, equivalent to inverse x, but gives positive z
+        rvec = np.array([np.pi, 0., 0.], dtype=np.float32)
         tvec = np.zeros(3, dtype=np.float32)
         dist_coeffs = np.zeros(5, dtype=np.float32)
         gt_pc, _ = self._render_pointcloud(gt_coord, image.shape[2], image.shape[1],
