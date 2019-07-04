@@ -77,11 +77,13 @@ class MeshRenderer(object):
                                         rvec, tvec, camera_k, camera_dist_coeffs)[0]
         vertices_2d = np.reshape(vertices_2d, (-1, 2))
         alpha = np.zeros((height, width, 3), np.float)
+        whiteboard = np.ones((3, height, width), np.float)
+        if np.isnan(vertices_2d).any():
+            return whiteboard, alpha
         for x, y in vertices_2d:
             cv2.circle(alpha, (x, y), radius=1, color=(1., 1., 1.), thickness=-1)
         rgb = self._process_render_result(alpha * color[None, None, :], height, width)
         alpha = self._process_render_result(alpha[:, :, 0], height, width)
-        whiteboard = np.ones((3, height, width), np.float)
         rgb = self._mix_render_result_with_image(rgb, alpha[0], whiteboard)
         return rgb, alpha
 
