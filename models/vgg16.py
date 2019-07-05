@@ -5,12 +5,13 @@ from torchvision import models
 
 import config
 
-models.VGG
 
 class VGG16P2M(nn.Module):
 
     def __init__(self, n_classes_input=3):
         super(VGG16P2M, self).__init__()
+
+        self.features_dim = 960
 
         self.conv0_1 = nn.Conv2d(n_classes_input, 16, 3, stride=1, padding=1)
         self.conv0_2 = nn.Conv2d(16, 16, 3, stride=1, padding=1)

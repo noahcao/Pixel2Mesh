@@ -6,6 +6,7 @@ from models.layers.gconv import GConv
 from models.layers.gpooling import GUnpooling
 from models.layers.gprojection import GProjection
 from models.resnet import resnet50
+from models.vgg16 import VGG16P2M
 
 
 class P2MModel(nn.Module):
@@ -20,7 +21,7 @@ class P2MModel(nn.Module):
         self.coord_dim = coord_dim
         self.init_pts = nn.Parameter(ellipsoid.coord, requires_grad=False)
 
-        self.nn_encoder = resnet50()
+        self.nn_encoder = VGG16P2M()
         self.features_dim = self.nn_encoder.features_dim + self.coord_dim
 
         self.gcns = nn.ModuleList([
