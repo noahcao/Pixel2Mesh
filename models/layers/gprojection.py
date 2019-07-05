@@ -17,7 +17,6 @@ class GProjection(nn.Module):
 
     def forward(self, img_features, inputs):
         # map to [-1, 1]
-        # not sure why here is a negative sign
         w = (-config.CAMERA_F[0] * (inputs[:, :, 0] / inputs[:, :, 2])) / config.CAMERA_C[0]
         h = (config.CAMERA_F[1] * (inputs[:, :, 1] / inputs[:, :, 2])) / config.CAMERA_C[1]
 

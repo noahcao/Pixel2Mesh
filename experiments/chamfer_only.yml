@@ -1,0 +1,7 @@
+based_on:
+  - baseline.yml
+loss:
+  weights:
+    normal: 0.
+    laplace: 0.
+    edge: 0.
