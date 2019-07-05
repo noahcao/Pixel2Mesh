@@ -51,9 +51,7 @@ class Ellipsoid(object):
             # 0: np.array, 2D, pos
             # 1: np.array, 1D, vals
             # 2: tuple - shape, n * n
-            adj_loops = torch_sparse_tensor(*fp_info[i][0])
             adj_mat = torch_sparse_tensor(*fp_info[i][1])
-            adj_mat += adj_loops
             self.adj_mat.append(adj_mat)
 
         ellipsoid_dir = os.path.dirname(file)

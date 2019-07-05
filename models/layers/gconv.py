@@ -19,6 +19,9 @@ class GConv(nn.Module):
 
         self.adj_mat = nn.Parameter(adj_mat, requires_grad=False)
         self.weight = nn.Parameter(torch.zeros((in_features, out_features), dtype=torch.float))
+        # Following https://github.com/Tong-ZHAO/Pixel2Mesh-Pytorch/blob/a0ae88c4a42eef6f8f253417b97df978db842708/model/gcn_layers.py#L45
+        # This seems to be different from the original implementation of P2M
+        self.loop_weight = nn.Parameter(torch.zeros((in_features, out_features), dtype=torch.float))
         if bias:
             self.bias = nn.Parameter(torch.zeros((out_features,), dtype=torch.float))
         else:
@@ -28,16 +31,19 @@ class GConv(nn.Module):
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
         self.weight.data.uniform_(-stdv, stdv)
+        self.loop_weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
             self.bias.data.uniform_(-stdv, stdv)
 
     def forward(self, inputs):
         support = torch.matmul(inputs, self.weight)
-        output = dot(self.adj_mat, support, True)
+        support_loop = torch.matmul(inputs, self.loop_weight)
+        output = dot(self.adj_mat, support, True) + support_loop
         if self.bias is not None:
-            return output + self.bias
+            ret = output + self.bias
         else:
-            return output
+            ret = output
+        return ret
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \

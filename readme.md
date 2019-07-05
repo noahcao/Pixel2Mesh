@@ -5,9 +5,9 @@
 - [x] Reorganize everything
 - [x] Add batch support
 - [x] Add mesh visualization in tensorboard
-- [ ] Add normal loss
+- [x] Add normal loss
 - [ ] Add evaluation
-- [ ] Train to see if everything works
+- [ ] Train to see if everything works (not sure why it doesn't)
 
 ## Environment Preparation
 

@@ -46,4 +46,4 @@ class CheckpointSaver(object):
                     modified_time = os.path.getmtime(file_path)
                     checkpoint_list.append((file_path, modified_time))
         checkpoint_list = sorted(checkpoint_list, key=lambda x: x[1])
-        return None if not checkpoint_list else checkpoint_list[-1]
+        return None if not checkpoint_list else checkpoint_list[-1][0]

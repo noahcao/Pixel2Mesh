@@ -112,6 +112,8 @@ def gen_options(options_file):
 def reset_options(options, args, phase='train'):
     if args.batch_size:
         options.train.batch_size = options.test.batch_size = args.batch_size
+    if args.version:
+        options.version = args.version
     if hasattr(args, "num_epochs") and args.num_epochs:
         options.train.num_epochs = args.num_epochs
     if hasattr(args, "checkpoint") and args.checkpoint:

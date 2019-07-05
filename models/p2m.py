@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from models.gbottleneck import GBottleneck
+from models.layers.gbottleneck import GBottleneck
 from models.layers.gconv import GConv
 from models.layers.gpooling import GUnpooling
 from models.layers.gprojection import GProjection
