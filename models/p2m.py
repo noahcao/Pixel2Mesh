@@ -6,7 +6,6 @@ from models.layers.gconv import GConv
 from models.layers.gpooling import GUnpooling
 from models.layers.gprojection import GProjection
 from models.resnet import resnet50
-from models.vgg16 import VGG16P2M, VGG16Decoder
 
 
 class P2MModel(nn.Module):
@@ -75,13 +74,3 @@ class P2MModel(nn.Module):
             "pred_coord": [x1, x2, x3],
             "pred_coord_before_deform": [init_pts, x1_up, x2_up],
         }
-
-    def build_encoder(self):
-        # VGG16 at first, then try resnet
-        # Can load params from model zoo
-        net = VGG16P2M(n_classes_input=3)
-        return net
-
-    def build_decoder(self):
-        net = VGG16Decoder()
-        return net
