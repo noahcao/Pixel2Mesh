@@ -24,9 +24,7 @@ class Trainer(CheckpointRunner):
         if shared_model is not None:
             self.model = shared_model
         else:
-            self.model = P2MModel(self.options.model.hidden,
-                                  self.options.model.coord_dim,
-                                  self.ellipsoid)
+            self.model = P2MModel(self.options.model, self.ellipsoid)
             self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
 
         # Setup a joint optimizer for the 2 models
@@ -40,7 +38,7 @@ class Trainer(CheckpointRunner):
         )
 
         # Create loss functions
-        self.criterion = P2MLoss(self.options, self.ellipsoid).cuda()
+        self.criterion = P2MLoss(self.options.loss, self.ellipsoid).cuda()
 
         # Create AverageMeters for losses
         self.losses = AverageMeter()
@@ -69,7 +67,6 @@ class Trainer(CheckpointRunner):
 
         # compute loss
         loss, loss_summary = self.criterion(out, input_batch)
-
         self.losses.update(loss.detach().cpu().item())
 
         # Do backprop

@@ -32,17 +32,20 @@ options.dataset.shapenet.num_points = 3000
 
 options.model = edict()
 options.model.name = "pixel2mesh"
-options.model.hidden = 192
+options.model.hidden_dim = 192
 options.model.coord_dim = 3
+options.model.backbone = "vgg16"
+options.model.gconv_activation = False
 
 options.loss = edict()
 options.loss.weights = edict()
-options.loss.weights.normal = 1.
-options.loss.weights.edge = 1.
-options.loss.weights.laplace = 1.
+options.loss.weights.normal = 1.6e-4
+options.loss.weights.edge = 0.3
+options.loss.weights.laplace = 45.0
+options.loss.weights.move = 3.0
 
 options.train = edict()
-options.train.num_epochs = 200
+options.train.num_epochs = 50
 options.train.batch_size = 4
 options.train.summary_steps = 50
 options.train.checkpoint_steps = 10000
@@ -62,9 +65,9 @@ options.test.shuffle = True
 
 options.optim = edict()
 options.optim.adam_beta1 = 0.9
-options.optim.lr = 2.5e-4
-options.optim.wd = 5e-6
-options.optim.lr_step = [140, 180]
+options.optim.lr = 1e-5
+options.optim.wd = 1e-6
+options.optim.lr_step = [30, 45]
 options.optim.lr_factor = 0.1
 
 

@@ -6,6 +6,24 @@ import torch
 import config
 
 
+def _process_render_result(img, height, width):
+    if isinstance(img, torch.Tensor):
+        img = img.cpu().numpy()
+    if img.ndim == 2:
+        # assuming single channel image
+        img = np.expand_dims(img, axis=0)
+    if img.shape[-1] == 3:
+        # assuming [height, width, rgb]
+        img = np.moveaxis(img, -1, 0)
+    # return 3 * width * height or width * height, in range [0, 1]
+    return np.clip(img[:height, :width], 0, 1)
+
+
+def _mix_render_result_with_image(rgb, alpha, image):
+    alpha = np.expand_dims(alpha, 0)
+    return alpha * rgb + (1 - alpha) * image
+
+
 class MeshRenderer(object):
 
     def __init__(self):
@@ -13,25 +31,10 @@ class MeshRenderer(object):
                        'light_blue': np.array([0.65098039, 0.74117647, 0.85882353])
                        }
         self.renderer = nr.Renderer(camera_mode='projection',
-                                    light_intensity_directional=1,
-                                    light_intensity_ambient=.5,
-                                    background_color=[1., 1., 1.])
-
-    def _mix_render_result_with_image(self, rgb, alpha, image):
-        alpha = np.expand_dims(alpha, 0)
-        return alpha * rgb + (1 - alpha) * image
-
-    def _process_render_result(self, img, height, width):
-        if isinstance(img, torch.Tensor):
-            img = img.cpu().numpy()
-        if img.ndim == 2:
-            # assuming single channel image
-            img = np.expand_dims(img, axis=0)
-        if img.shape[-1] == 3:
-            # assuming [height, width, rgb]
-            img = np.moveaxis(img, -1, 0)
-        # return 3 * width * height or width * height, in range [0, 1]
-        return np.clip(img[:height, :width], 0, 1)
+                                    light_intensity_directional=.8,
+                                    light_intensity_ambient=.3,
+                                    background_color=[1., 1., 1.],
+                                    light_direction=[0., 0., -1.])
 
     def _render_mesh(self, vertices: np.ndarray, faces: np.ndarray, width, height,
                      camera_k, camera_dist_coeffs, rvec, tvec, color=None):
@@ -63,8 +66,8 @@ class MeshRenderer(object):
                                              dist_coeffs=camera_dist_coeffs.unsqueeze(0).cuda(),
                                              orig_size=img_size)
         # use the extra dimension of alpha for broadcasting
-        alpha = self._process_render_result(alpha[0], height, width)
-        rgb = self._process_render_result(rgb[0], height, width)
+        alpha = _process_render_result(alpha[0], height, width)
+        rgb = _process_render_result(rgb[0], height, width)
 
         return rgb, alpha
 
@@ -82,9 +85,9 @@ class MeshRenderer(object):
             return whiteboard, alpha
         for x, y in vertices_2d:
             cv2.circle(alpha, (x, y), radius=1, color=(1., 1., 1.), thickness=-1)
-        rgb = self._process_render_result(alpha * color[None, None, :], height, width)
-        alpha = self._process_render_result(alpha[:, :, 0], height, width)
-        rgb = self._mix_render_result_with_image(rgb, alpha[0], whiteboard)
+        rgb = _process_render_result(alpha * color[None, None, :], height, width)
+        alpha = _process_render_result(alpha[:, :, 0], height, width)
+        rgb = _mix_render_result_with_image(rgb, alpha[0], whiteboard)
         return rgb, alpha
 
     def visualize_reconstruction(self, gt_coord, coord, faces, image):

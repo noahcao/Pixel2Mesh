@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
 
+from models.backbones.resnet import resnet50
 from models.layers.gbottleneck import GBottleneck
 from models.layers.gconv import GConv
 from models.layers.gpooling import GUnpooling
 from models.layers.gprojection import GProjection
-from models.resnet import resnet50
-from models.vgg16 import VGG16P2M
+from models.backbones.vgg16 import VGG16P2M
 
 
 class P2MModel(nn.Module):
@@ -14,23 +14,29 @@ class P2MModel(nn.Module):
     Implement the joint model for Pixel2mesh
     """
 
-    def __init__(self, hidden_dim, coord_dim, ellipsoid):
+    def __init__(self, options, ellipsoid):
         super(P2MModel, self).__init__()
 
-        self.hidden_dim = hidden_dim
-        self.coord_dim = coord_dim
+        self.hidden_dim = options.hidden_dim
+        self.coord_dim = options.coord_dim
         self.init_pts = nn.Parameter(ellipsoid.coord, requires_grad=False)
+        self.gconv_activation = options.gconv_activation
 
-        self.nn_encoder = VGG16P2M()
+        if options.backbone == "vgg16":
+            self.nn_encoder = VGG16P2M()
+        elif options.backbone == "resnet50":
+            self.nn_encoder = resnet50()
+        else:
+            raise NotImplementedError("No implemented backbone called '%s' found" % options.backbone)
         self.features_dim = self.nn_encoder.features_dim + self.coord_dim
 
         self.gcns = nn.ModuleList([
             GBottleneck(6, self.features_dim, self.hidden_dim, self.coord_dim,
-                        ellipsoid.adj_mat[0]),
+                        ellipsoid.adj_mat[0], activation=self.gconv_activation),
             GBottleneck(6, self.features_dim + self.hidden_dim, self.hidden_dim, self.coord_dim,
-                        ellipsoid.adj_mat[1]),
+                        ellipsoid.adj_mat[1], activation=self.gconv_activation),
             GBottleneck(6, self.features_dim + self.hidden_dim, self.hidden_dim, self.hidden_dim,
-                        ellipsoid.adj_mat[2])
+                        ellipsoid.adj_mat[2], activation=self.gconv_activation)
         ])
 
         self.unpooling = nn.ModuleList([

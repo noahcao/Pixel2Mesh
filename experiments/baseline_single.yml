@@ -1,5 +1,0 @@
-based_on:
-  - baseline.yml
-num_gpus: 1
-train:
-  batch_size: 4

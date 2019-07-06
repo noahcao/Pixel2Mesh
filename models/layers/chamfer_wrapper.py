@@ -24,12 +24,12 @@ class ChamferFunction(Function):
         idx2 = idx2.cuda()
 
         chamfer.forward(xyz1, xyz2, dist1, dist2, idx1, idx2)
-        ctx.save_for_backward(xyz1, xyz2)
-        return dist1, idx1, dist2, idx2
+        ctx.save_for_backward(xyz1, xyz2, idx1, idx2)
+        return dist1, dist2, idx1, idx2
 
     @staticmethod
-    def backward(ctx, graddist1, idx1, graddist2, idx2):
-        xyz1, xyz2 = ctx.saved_tensors
+    def backward(ctx, graddist1, graddist2, _idx1, _idx2):
+        xyz1, xyz2, idx1, idx2 = ctx.saved_tensors
         graddist1 = graddist1.contiguous()
         graddist2 = graddist2.contiguous()
 

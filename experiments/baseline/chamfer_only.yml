@@ -1,5 +1,5 @@
 based_on:
-  - baseline.yml
+  - default.yml
 loss:
   weights:
     normal: 0.

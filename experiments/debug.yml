@@ -1,6 +1,10 @@
+dataset:
+  subset_train: train_plane
+  subset_eval: test_plane
 train:
   batch_size: 2
   test_steps: 100
   summary_steps: 1
+  shuffle: false
 test:
   summary_steps: 5

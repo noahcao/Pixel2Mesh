@@ -8,7 +8,7 @@ from models.layers.chamfer_wrapper import ChamferDist
 class P2MLoss(nn.Module):
     def __init__(self, options, ellipsoid):
         super().__init__()
-        self.options = options.loss
+        self.options = options
         self.l1_loss = nn.L1Loss(reduction='none')
         self.l2_loss = nn.MSELoss(reduction='mean')
         self.chamfer_dist = ChamferDist()
@@ -86,7 +86,7 @@ class P2MLoss(nn.Module):
         pred_coord, pred_coord_before_deform = outputs["pred_coord"], outputs["pred_coord_before_deform"]
 
         for i in range(3):
-            dist1, idx1, dist2, idx2 = self.chamfer_dist(gt_coord, pred_coord[i])
+            dist1, dist2, idx1, idx2 = self.chamfer_dist(gt_coord, pred_coord[i])
             chamfer_loss += torch.mean(dist1) + torch.mean(dist2)
             normal_loss += self.normal_loss(gt_normal, idx2, pred_coord[i], self.edges[i])
             edge_loss += self.edge_regularization(pred_coord[i], self.edges[i])
@@ -96,9 +96,11 @@ class P2MLoss(nn.Module):
             move_loss += lap_const[i] * move
 
         loss = chamfer_loss + \
-               self.options.weights.normal * normal_loss + \
-               self.options.weights.laplace * (lap_loss + move_loss) + \
-               self.options.weights.edge * edge_loss
+               self.options.weights.laplace * lap_loss + \
+               self.options.weights.move * move_loss + \
+               self.options.weights.edge * edge_loss + \
+               self.options.weights.normal * normal_loss
+
         return loss, {
             "loss": loss,
             "loss_chamfer": chamfer_loss,
