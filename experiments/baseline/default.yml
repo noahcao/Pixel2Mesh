@@ -4,4 +4,4 @@ train:
 test:
   batch_size: 32
 optim:
-  lr: 5.0E-3
+  lr: 5.0E-5

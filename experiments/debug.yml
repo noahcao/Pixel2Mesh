@@ -2,11 +2,13 @@ dataset:
   subset_train: train_plane
   subset_eval: test_plane
 train:
-  batch_size: 2
+  batch_size: 4
   test_epochs: 1
   summary_steps: 1
   shuffle: false
 model:
   backbone: resnet50
+optim:
+  lr: 5.0E-5
 test:
   summary_steps: 5
