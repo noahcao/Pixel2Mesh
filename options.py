@@ -139,9 +139,11 @@ def reset_options(options, args, phase='train'):
     os.makedirs(options.summary_dir, exist_ok=True)
 
     logger = create_logger(options, phase=phase)
-    logger.info(pprint.pformat(vars(options)))
+    options_text = pprint.pformat(vars(options))
+    logger.info(options_text)
 
     print('=> creating summary writer')
     writer = SummaryWriter(options.summary_dir)
+    writer.add_text("options", options_text, 0)
 
     return logger, writer
