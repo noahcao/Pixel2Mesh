@@ -1,249 +1,139 @@
-"""
-Evaluator template, not yet implemented
-"""
-
-import os
 from logging import Logger
 
-import cv2
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import config
 from functions.base import CheckpointRunner
+from models.layers.chamfer_wrapper import ChamferDist
+from models.p2m import P2MModel
 from utils.average_meter import AverageMeter
 from utils.mesh import Ellipsoid
+from utils.vis.renderer import MeshRenderer
 
 
 class Evaluator(CheckpointRunner):
 
-    def __init__(self, options, logger: Logger, writer, dataset, shared_model=None):
-        self.annot_path = None
-        self.eval_pose = self.eval_shape = self.eval_masks = self.eval_parts = False
-        if dataset == 'h36m-p1' or dataset == 'h36m-p2':
-            self.eval_pose = True
-        elif dataset == 'up-3d':
-            self.eval_shape = True
-        elif dataset == 'lsp':
-            self.eval_masks = True
-            self.eval_parts = True
-            self.annot_path = config.DATASET_FOLDERS['upi-s1h']
-        else:
-            raise ValueError("Unsupported Dataset")
-        self.dataset_name = dataset
-        super().__init__(options, logger, writer, dataset=dataset, training=False, shared_model=shared_model)
+    def __init__(self, options, logger: Logger, writer, shared_model=None):
+        super().__init__(options, logger, writer, training=False, shared_model=shared_model)
 
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):
-        self.mesh = Ellipsoid()
-        self.faces = self.mesh.faces.cuda()
+        # create ellipsoid
+        self.ellipsoid = Ellipsoid()
 
         if shared_model is not None:
-            self.cmr = shared_model
+            self.model = shared_model
         else:
-            # create GraphCNN + SMPLRegressor
-            self.cmr = CMR(self.mesh,
-                           num_layers=self.options.model.num_layers,
-                           num_channels=self.options.model.num_channels)
-            self.cmr = torch.nn.DataParallel(self.cmr, device_ids=self.gpus).cuda()
-        self.smpl = SMPL().cuda()
-
-        # Regressor for H36m joints
-        self.J_regressor = torch.from_numpy(np.load(config.JOINT_REGRESSOR_H36M)).float()
+            self.model = P2MModel(self.options.model, self.ellipsoid)
+            self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
 
         # Renderer for visualization
-        self.renderer = Renderer(faces=self.smpl.faces.cpu().detach())
-        self.part_renderer = PartRenderer()
+        self.renderer = MeshRenderer()
+
+        # Initialize distance module
+        self.chamfer = ChamferDist()
 
         # Evaluate step count, useful in summary
         self.evaluate_step_count = 0
+        self.total_step_count = 0
 
     def models_dict(self):
-        return {'graph_cnn': self.cmr.module.graph_cnn,
-                'smpl_param_regressor': self.cmr.module.smpl_param_regressor}
+        return {'model': self.model}
 
-    def evaluate_pose(self, pred_vertices, pred_vertices_smpl, gt_pose_3d):
-        J_regressor_batch = self.J_regressor[None, :].expand(pred_vertices.shape[0], -1, -1).cuda()
+    def evaluate_f1(self, dis_to_pred, dis_to_gt, pred_length, gt_length, thresh):
+        recall = np.sum(dis_to_gt < thresh) / gt_length
+        prec = np.sum(dis_to_pred < thresh) / pred_length
+        return 2 * prec * recall / (prec + recall + 1e-8)
 
-        # Get 14 ground truth joints
-        gt_keypoints_3d = gt_pose_3d.cuda()
-        gt_keypoints_3d = gt_keypoints_3d[:, config.J24_TO_J14, :-1]
-
-        # Get 14 predicted joints from the non-parametic mesh
-        pred_keypoints_3d = torch.matmul(J_regressor_batch, pred_vertices)
-        pred_pelvis = pred_keypoints_3d[:, [0], :].clone()
-        pred_keypoints_3d = pred_keypoints_3d[:, config.H36M_TO_J14, :]
-        pred_keypoints_3d = pred_keypoints_3d - pred_pelvis
-        # Get 14 predicted joints from the SMPL mesh
-        pred_keypoints_3d_smpl = torch.matmul(J_regressor_batch, pred_vertices_smpl)
-        pred_pelvis_smpl = pred_keypoints_3d_smpl[:, [0], :].clone()
-        pred_keypoints_3d_smpl = pred_keypoints_3d_smpl[:, config.H36M_TO_J14, :]
-        pred_keypoints_3d_smpl = pred_keypoints_3d_smpl - pred_pelvis_smpl
-
-        # Compute error metrics
-
-        # Absolute error (MPJPE)
-        error = torch.sqrt(((pred_keypoints_3d - gt_keypoints_3d) ** 2).sum(dim=-1)).mean(dim=-1).cpu().numpy()
-        error_smpl = torch.sqrt(((pred_keypoints_3d_smpl - gt_keypoints_3d) ** 2).sum(dim=-1)).mean(
-            dim=-1).cpu().numpy()
-        self.mpjpe.update(error)
-        self.mpjpe_smpl.update(error_smpl)
-
-        # Reconstuction_error
-        r_error = reconstruction_error(pred_keypoints_3d.cpu().numpy(), gt_keypoints_3d.cpu().numpy(),
-                                       reduction=None)
-        r_error_smpl = reconstruction_error(pred_keypoints_3d_smpl.cpu().numpy(), gt_keypoints_3d.cpu().numpy(),
-                                            reduction=None)
-        self.recon_err.update(r_error)
-        self.recon_err_smpl.update(r_error_smpl)
-
-    def evaluate_shape(self, pred_vertices, pred_vertices_smpl, gt_vertices):
-        se = torch.sqrt(((pred_vertices - gt_vertices) ** 2).sum(dim=-1)).mean(dim=-1).cpu().numpy()
-        se_smpl = torch.sqrt(((pred_vertices_smpl - gt_vertices) ** 2).sum(dim=-1)).mean(dim=-1).cpu().numpy()
-        self.shape_err.update(se)
-        self.shape_err_smpl.update(se_smpl)
-
-    def evaluate_mask_and_parts_for_lsp(self, pred_vertices, pred_camera, center, scale, orig_shape,
-                                        maskname, partname):
-        mask, parts = self.part_renderer(pred_vertices, pred_camera)
-        center = center.cpu().numpy()
-        scale = scale.cpu().numpy()
-        # Dimensions of original image
-        orig_shape = orig_shape.cpu().numpy()
-        curr_batch_size = pred_vertices.size(0)
-        if self.eval_masks:
-            for i in range(curr_batch_size):
-                # After rendering, convert image back to original resolution
-                pred_mask = uncrop(mask[i].cpu().numpy(), center[i], scale[i], orig_shape[i]) > 0
-                # Load gt mask
-                gt_mask = cv2.imread(os.path.join(self.annot_path, maskname[i]), 0) > 0
-
-                # Evaluation consistent with the original UP-3D code
-                self.accuracy.update((gt_mask == pred_mask).sum() / np.prod(np.array(gt_mask.shape)))
-                for c in range(2):
-                    cgt = gt_mask == c
-                    cpred = pred_mask == c
-                    self.tp[c] += (cgt & cpred).sum()
-                    self.fp[c] += (~cgt & cpred).sum()
-                    self.fn[c] += (cgt & ~cpred).sum()
-
-        if self.eval_parts:
-            for i in range(curr_batch_size):
-                pred_parts = uncrop(parts[i].cpu().numpy().astype(np.uint8), center[i], scale[i], orig_shape[i])
-                # Load gt part segmentation
-                gt_parts = cv2.imread(os.path.join(self.annot_path, partname[i]), 0)
-                # Evaluation consistent with the original UP-3D code
-                # 6 parts + background
-                for c in range(7):
-                    cgt = gt_parts == c
-                    cpred = pred_parts == c
-                    cpred[gt_parts == 255] = 0
-                    self.parts_tp[c] += (cgt & cpred).sum()
-                    self.parts_fp[c] += (~cgt & cpred).sum()
-                    self.parts_fn[c] += (cgt & ~cpred).sum()
-                gt_parts[gt_parts == 255] = 0
-                pred_parts[pred_parts == 255] = 0
-                self.parts_accuracy.update((gt_parts == pred_parts).sum() / np.prod(np.array(gt_parts.shape)))
-
-    @staticmethod
-    def f1_mean(tp, fp, fn):
-        return (2 * tp / (2 * tp + fp + fn)).mean()
+    def evaluate_chamfer_and_f1(self, pred_vertices, gt_points, gt_length):
+        # calculate accurate chamfer distance; ground truth points with different lengths;
+        # therefore cannot be batched
+        batch_size = gt_points.size(0)
+        pred_length = pred_vertices.size(1)
+        for i in range(batch_size):
+            gt_length_i = min(gt_length[i].cpu().item(), self.options.dataset.shapenet.num_points)
+            d1, d2, i1, i2 = self.chamfer(pred_vertices[i].unsqueeze(0), gt_points[i, :gt_length_i].unsqueeze(0))
+            d1, d2 = d1.cpu().numpy(), d2.cpu().numpy()  # convert to millimeter
+            self.chamfer_distance.update(np.mean(d1) + np.mean(d2))
+            self.f1_tau.update(self.evaluate_f1(d1, d2, pred_length, gt_length_i, 1E-4))
+            self.f1_2tau.update(self.evaluate_f1(d1, d2, pred_length, gt_length_i, 2E-4))
 
     def evaluate_step(self, input_batch):
-        self.cmr.eval()
+        self.model.eval()
 
         # Get ground truth
-        gt_pose = input_batch['pose'].cuda()
-        gt_betas = input_batch['betas'].cuda()
-        gt_vertices = self.smpl(gt_pose, gt_betas)
-        images = input_batch['img'].cuda()
+        images = input_batch['images']
+        gt_points = input_batch['points']
+        gt_length = input_batch['length']
 
         # Run inference
         with torch.no_grad():
-            pred_vertices, pred_vertices_smpl, pred_camera, pred_rotmat, pred_betas = self.cmr(images)
+            out = self.model(images)
+            pred_vertices = out["pred_coord"][-1]
 
-        if self.eval_pose:
-            self.evaluate_pose(pred_vertices, pred_vertices_smpl, input_batch['pose_3d'])
-        if self.eval_shape:
-            self.evaluate_shape(pred_vertices, pred_vertices_smpl, gt_vertices)
-        if self.eval_masks or self.eval_parts:
-            self.evaluate_mask_and_parts_for_lsp(pred_vertices, pred_camera, input_batch['center'],
-                                                 input_batch['scale'], input_batch['orig_shape'],
-                                                 input_batch['maskname'], input_batch['partname'])
+            self.evaluate_chamfer_and_f1(pred_vertices, gt_points, gt_length)
 
-        return pred_vertices, pred_vertices_smpl, pred_camera, pred_rotmat, pred_betas
+        return out
 
     # noinspection PyAttributeOutsideInit
     def evaluate(self):
-        self.logger.info("Running evaluations on [%s]" % self.dataset_name)
+        self.logger.info("Running evaluations...")
+
+        # clear evaluate_step_count, but keep total count uncleared
+        self.evaluate_step_count = 0
+
         test_data_loader = DataLoader(self.dataset,
                                       batch_size=self.options.test.batch_size * self.options.num_gpus,
                                       num_workers=self.options.num_workers,
                                       pin_memory=self.options.pin_memory,
                                       shuffle=self.options.test.shuffle)
 
-        # Initialize average meters
-        if self.eval_pose:
-            # Pose metrics: MPJPE and Reconstruction error for the non-parametric and parametric shapes
-            self.mpjpe = AverageMeter(1000)
-            self.recon_err = AverageMeter(1000)
-            self.mpjpe_smpl = AverageMeter(1000)
-            self.recon_err_smpl = AverageMeter(1000)
-        if self.eval_shape:
-            # Mean per-vertex error
-            self.shape_err = AverageMeter(1000)
-            self.shape_err_smpl = AverageMeter(1000)
-        if self.eval_masks:
-            self.accuracy = AverageMeter()
-            # True positive, false positive and false negative
-            self.tp, self.fp, self.fn = np.zeros((2, 1)), np.zeros((2, 1)), np.zeros((2, 1))
-        if self.eval_parts:
-            self.parts_accuracy = AverageMeter()
-            self.parts_tp, self.parts_fp, self.parts_fn = np.zeros((7, 1)), np.zeros((7, 1)), np.zeros((7, 1))
+        self.chamfer_distance = AverageMeter()
+        self.f1_tau = AverageMeter()
+        self.f1_2tau = AverageMeter()
 
         # Iterate over all batches in an epoch
         for step, batch in enumerate(test_data_loader):
-            # Run training step
+            # Send input to GPU
+            batch = {k: v.cuda() for k, v in batch.items() if isinstance(v, torch.Tensor)}
+
+            # Run evaluation step
             out = self.evaluate_step(batch)
 
             # Tensorboard logging every summary_steps steps
             if self.evaluate_step_count % self.options.test.summary_steps == 0:
-                self.evaluate_summaries(batch, *out)
+                self.evaluate_summaries(batch, out)
 
             # add later to log at step 0
             self.evaluate_step_count += 1
+            self.total_step_count += 1
 
-    def evaluate_summaries(self, input_batch, pred_vertices, pred_vertices_smpl, pred_camera, pred_rotmat, pred_betas):
-        message = "Test [%s] Step %06d/%06d " % (self.dataset_name, self.evaluate_step_count,
+        for key, val in self.get_result_summary().items():
+            scalar = val
+            if isinstance(val, AverageMeter):
+                scalar = val.avg
+            self.logger.info("Test [%06d] %s: %.6f" % (self.total_step_count, key, scalar))
+            self.summary_writer.add_scalar("eval_" + key, scalar, self.total_step_count + 1)
+
+    def get_result_summary(self):
+        result_dict = {
+            "cd": self.chamfer_distance,
+            "f1_tau": self.f1_tau,
+            "f1_2tau": self.f1_2tau,
+        }
+        return result_dict
+
+    def evaluate_summaries(self, input_batch, out_summary):
+        self.logger.info("Test Step %06d/%06d (%06d) " % (self.evaluate_step_count,
                                                  len(self.dataset) // (
-                                                             self.options.num_gpus * self.options.test.batch_size))
+                                                         self.options.num_gpus * self.options.test.batch_size),
+                                                               self.total_step_count,) \
+            + ", ".join([key + " " + (str(val) if isinstance(val, AverageMeter) else "%.6f" % val)
+                         for key, val in self.get_result_summary().items()]))
 
-        if self.eval_pose:
-            message += "MPJPE-NonP %s, Recon-NonP %s, MPJPE-Param %s, Recon-Param %s " % (
-                self.mpjpe, self.recon_err, self.mpjpe_smpl, self.recon_err_smpl
-            )
-        if self.eval_shape:
-            message += "Shape-NonP %s, Shape-Param %s " % (self.shape_err, self.shape_err_smpl)
-        if self.eval_masks:
-            message += "Accuracy %s, F1 %.6f " % (self.accuracy, self.f1_mean(self.tp, self.fp, self.fn))
-        if self.eval_parts:
-            message += "Parts Accuracy %s, Parts F1 %.6f " % (
-            self.parts_accuracy, self.f1_mean(self.parts_tp, self.parts_fp, self.parts_fn))
-        self.logger.info(message)
+        # Do visualization for the first 2 images of the batch
+        render_mesh = self.renderer.p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)
+        self.summary_writer.add_image("eval_render_mesh", render_mesh, self.step_count)
 
-        pred_keypoints_3d = self.smpl.get_joints(pred_vertices)
-        pred_keypoints_2d = orthographic_projection(pred_keypoints_3d, pred_camera)[:, :, :2]
-        pred_keypoints_3d_smpl = self.smpl.get_joints(pred_vertices_smpl)
-        pred_keypoints_2d_smpl = orthographic_projection(pred_keypoints_3d_smpl, pred_camera)[:, :, :2]
-
-        rend_imgs, rend_imgs_smpl = visualize_batch_recon_and_keypoints(4, self.renderer, input_batch["img_orig"],
-                                                                        pred_vertices, pred_vertices_smpl,
-                                                                        pred_camera, pred_keypoints_2d,
-                                                                        pred_keypoints_2d_smpl,
-                                                                        input_batch['keypoints'])
-
-        # Save results in Tensorboard
-        self.summary_writer.add_image('eval_imgs', rend_imgs, self.step_count)
-        self.summary_writer.add_image('eval_imgs_smpl', rend_imgs_smpl, self.step_count)

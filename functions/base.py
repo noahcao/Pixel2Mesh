@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 from logging import Logger
 
 import torch
@@ -100,3 +101,7 @@ class CheckpointRunner(object):
             for optimizer_name, optimizer in self.optimizers_dict().items():
                 checkpoint[optimizer_name] = optimizer.state_dict()
         self.saver.save_checkpoint(checkpoint, "%06d_%06d" % (self.step_count, self.epoch_count))
+
+    @property
+    def time_elapsed(self):
+        return timedelta(seconds=time.time() - self.time_start)

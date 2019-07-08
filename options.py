@@ -49,7 +49,7 @@ options.train.num_epochs = 50
 options.train.batch_size = 4
 options.train.summary_steps = 50
 options.train.checkpoint_steps = 10000
-options.train.test_steps = 10000
+options.train.test_epochs = 1
 options.train.rot_factor = 30
 options.train.noise_factor = 0.4
 options.train.scale_factor = 0.25
@@ -65,8 +65,8 @@ options.test.shuffle = True
 
 options.optim = edict()
 options.optim.adam_beta1 = 0.9
-options.optim.lr = 1e-5
-options.optim.wd = 1e-6
+options.optim.lr = 5.0E-5
+options.optim.wd = 5.0E-6
 options.optim.lr_step = [30, 45]
 options.optim.lr_factor = 0.1
 

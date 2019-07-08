@@ -6,6 +6,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from functions.base import CheckpointRunner
+from functions.evaluator import Evaluator
 from models.losses.p2m import P2MLoss
 from models.p2m import P2MModel
 from utils.average_meter import AverageMeter
@@ -47,7 +48,7 @@ class Trainer(CheckpointRunner):
         self.renderer = MeshRenderer()
 
         # Evaluators
-        self.evaluators = []
+        self.evaluators = [Evaluator(self.options, self.logger, self.summary_writer, shared_model=self.model)]
 
     def models_dict(self):
         return {'model': self.model}
@@ -109,9 +110,9 @@ class Trainer(CheckpointRunner):
                 if self.step_count % self.options.train.checkpoint_steps == 0:
                     self.dump_checkpoint()
 
-                # Run validation every test_steps steps
-                if self.step_count % self.options.train.test_steps == 0:
-                    self.test()
+            # Run validation every test_epochs
+            if self.epoch_count % self.options.train.test_epochs == 0:
+                self.test()
 
             # save checkpoint after each epoch
             self.dump_checkpoint()
@@ -133,7 +134,7 @@ class Trainer(CheckpointRunner):
             self.epoch_count, self.step_count,
             self.options.train.num_epochs * len(self.dataset) // (
                         self.options.train.batch_size * self.options.num_gpus),
-            timedelta(seconds=time.time() - self.time_start), self.losses.val, self.losses.avg))
+            self.time_elapsed, self.losses.val, self.losses.avg))
 
     def test(self):
         for evaluator in self.evaluators:

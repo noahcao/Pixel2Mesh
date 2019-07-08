@@ -3,7 +3,7 @@ dataset:
   subset_eval: test_plane
 train:
   batch_size: 2
-  test_steps: 100
+  test_epochs: 1
   summary_steps: 1
   shuffle: false
 model:

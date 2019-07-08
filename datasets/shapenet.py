@@ -30,7 +30,8 @@ class ShapeNet(Dataset):
 
         img, pts, normals = data[0].astype(np.float32) / 255.0, data[1][:, :3], data[1][:, 3:]
         assert pts.shape[0] == normals.shape[0]
-        choices = np.resize(np.random.permutation(pts.shape[0]), self.num_points)
+        length = pts.shape[0]
+        choices = np.resize(np.random.permutation(length), self.num_points)
         pts = pts[choices]
         normals = normals[choices]
 
@@ -41,7 +42,8 @@ class ShapeNet(Dataset):
             "points": pts,
             "normals": normals,
             "labels": label,
-            "filename": filename
+            "filename": filename,
+            "length": length
         }
 
     def __len__(self):

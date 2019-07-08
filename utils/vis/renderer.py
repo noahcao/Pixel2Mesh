@@ -106,7 +106,7 @@ class MeshRenderer(object):
                                     camera_k, dist_coeffs, rvec, tvec)
         return np.concatenate((image, gt_pc, pred_pc, mesh), 2)
 
-    def p2m_batch_visualize(self, batch_input, batch_output, faces, atmost=2):
+    def p2m_batch_visualize(self, batch_input, batch_output, faces, atmost=3):
         """
         Every thing is tensor for now, needs to move to cpu and convert to numpy
         """
@@ -116,7 +116,7 @@ class MeshRenderer(object):
             image = batch_input["images"][i].cpu().numpy()
             gt_points = batch_input["points"][i].cpu().numpy()
             for j in range(3):
-                for k in ["pred_coord_before_deform", "pred_coord"]:
+                for k in (["pred_coord_before_deform", "pred_coord"] if j == 0 else ["pred_coord"]):
                     coord = batch_output[k][j][i].cpu().numpy()
                     images_stack.append(self.visualize_reconstruction(gt_points, coord, faces[j].cpu().numpy(), image))
         return torch.from_numpy(np.concatenate(images_stack, 1))
