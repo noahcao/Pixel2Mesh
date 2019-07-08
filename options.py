@@ -50,11 +50,7 @@ options.train.batch_size = 4
 options.train.summary_steps = 50
 options.train.checkpoint_steps = 10000
 options.train.test_epochs = 1
-options.train.rot_factor = 30
-options.train.noise_factor = 0.4
-options.train.scale_factor = 0.25
 options.train.use_augmentation = True
-options.train.use_augmentation_rgb = True
 options.train.shuffle = True
 
 options.test = edict()
