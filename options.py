@@ -62,8 +62,8 @@ options.test.shuffle = True
 
 options.optim = edict()
 options.optim.adam_beta1 = 0.9
-options.optim.lr = 5.0E-5
-options.optim.wd = 5.0E-6
+options.optim.lr = 1.0E-5
+options.optim.wd = 1.0E-6
 options.optim.lr_step = [30, 45]
 options.optim.lr_factor = 0.1
 
