@@ -43,7 +43,7 @@ options.loss.weights.normal = 1.6e-4
 options.loss.weights.edge = 0.3
 options.loss.weights.laplace = 0.5
 options.loss.weights.move = 0.1
-options.loss.weights.constant = 100.
+options.loss.weights.constant = 1.
 
 options.train = edict()
 options.train.num_epochs = 50
@@ -62,7 +62,7 @@ options.test.shuffle = True
 
 options.optim = edict()
 options.optim.adam_beta1 = 0.9
-options.optim.lr = 1.0E-5
+options.optim.lr = 5.0E-5
 options.optim.wd = 1.0E-6
 options.optim.lr_step = [30, 45]
 options.optim.lr_factor = 0.1
