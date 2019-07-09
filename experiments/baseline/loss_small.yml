@@ -1,0 +1,9 @@
+based_on:
+  - default.yml
+loss:
+  weights:
+    constant: 1.
+    normal: 1.6e-4
+    edge: 0.3
+    laplace: 45.0
+    move: 3.0
