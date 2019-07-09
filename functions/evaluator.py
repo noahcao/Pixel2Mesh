@@ -90,6 +90,8 @@ class Evaluator(CheckpointRunner):
                                       pin_memory=self.options.pin_memory,
                                       shuffle=self.options.test.shuffle)
 
+        self.logger.info("Data loader prepared!")
+
         self.chamfer_distance = AverageMeter()
         self.f1_tau = AverageMeter()
         self.f1_2tau = AverageMeter()
@@ -99,12 +101,18 @@ class Evaluator(CheckpointRunner):
             # Send input to GPU
             batch = {k: v.cuda() for k, v in batch.items() if isinstance(v, torch.Tensor)}
 
+            self.logger.info("Batch ready")
+
             # Run evaluation step
             out = self.evaluate_step(batch)
+
+            self.logger.info("Batch step complete")
 
             # Tensorboard logging every summary_steps steps
             if self.evaluate_step_count % self.options.test.summary_steps == 0:
                 self.evaluate_summaries(batch, out)
+
+            self.logger.info("Tensorboard finished!")
 
             # add later to log at step 0
             self.evaluate_step_count += 1
