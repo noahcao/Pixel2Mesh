@@ -1,4 +1,4 @@
 based_on:
   - default.yml
 model:
-  gconv_activation: true
+  gconv_activation: false

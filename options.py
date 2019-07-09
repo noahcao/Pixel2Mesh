@@ -35,14 +35,15 @@ options.model.name = "pixel2mesh"
 options.model.hidden_dim = 192
 options.model.coord_dim = 3
 options.model.backbone = "vgg16"
-options.model.gconv_activation = False
+options.model.gconv_activation = True
 
 options.loss = edict()
 options.loss.weights = edict()
 options.loss.weights.normal = 1.6e-4
 options.loss.weights.edge = 0.3
-options.loss.weights.laplace = 45.0
-options.loss.weights.move = 3.0
+options.loss.weights.laplace = 0.5
+options.loss.weights.move = 0.1
+options.loss.weights.constant = 100.
 
 options.train = edict()
 options.train.num_epochs = 50
@@ -85,7 +86,7 @@ def _update_options(options_file):
     # in the second round, we update everything
 
     with open(options_file) as f:
-        options_dict = yaml.load(f)
+        options_dict = yaml.safe_load(f)
         # do a dfs on `BASED_ON` options files
         if "based_on" in options_dict:
             for base_options in options_dict["based_on"]:
@@ -105,7 +106,13 @@ def gen_options(options_file):
             cfg[k] = dict(v)
 
     with open(options_file, 'w') as f:
-        yaml.dump(dict(cfg), f, default_flow_style=False)
+        yaml.safe_dump(dict(cfg), f, default_flow_style=False)
+
+
+def slugify(filename):
+    filename = os.path.relpath(filename, ".")
+    filename = filename.lstrip("experiments/")
+    return os.path.splitext(filename)[0].lower().replace("/", "_").replace(".", "_")
 
 
 def reset_options(options, args, phase='train'):
@@ -121,7 +128,10 @@ def reset_options(options, args, phase='train'):
     options.name = args.name
 
     if options.version is None:
-        options.version = datetime.now().strftime('%Y%m%d%H%M%S')
+        prefix = ""
+        if args.options:
+            prefix = slugify(args.options) + "_"
+        options.version = prefix + datetime.now().strftime('%m%d%H%M%S')  # ignore %Y
     options.log_dir = os.path.join(options.log_dir, options.name)
     print('=> creating {}'.format(options.log_dir))
     os.makedirs(options.log_dir, exist_ok=True)
@@ -140,6 +150,5 @@ def reset_options(options, args, phase='train'):
 
     print('=> creating summary writer')
     writer = SummaryWriter(options.summary_dir)
-    writer.add_text("options", options_text, 0)
 
     return logger, writer

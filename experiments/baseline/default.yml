@@ -3,5 +3,3 @@ train:
   batch_size: 32
 test:
   batch_size: 32
-optim:
-  lr: 5.0E-5
