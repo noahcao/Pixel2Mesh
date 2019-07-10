@@ -110,12 +110,12 @@ class Trainer(CheckpointRunner):
                 if self.step_count % self.options.train.checkpoint_steps == 0:
                     self.dump_checkpoint()
 
+            # save checkpoint after each epoch
+            self.dump_checkpoint()
+
             # Run validation every test_epochs
             if self.epoch_count % self.options.train.test_epochs == 0:
                 self.test()
-
-            # save checkpoint after each epoch
-            self.dump_checkpoint()
 
             # lr scheduler step
             self.lr_scheduler.step()
