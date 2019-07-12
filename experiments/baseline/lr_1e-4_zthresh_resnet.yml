@@ -1,0 +1,4 @@
+based_on:
+  - lr_1e-4_zthresh.yml
+model:
+  backbone: resnet50

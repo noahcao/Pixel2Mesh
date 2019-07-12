@@ -1,0 +1,4 @@
+based_on:
+  - default.yml
+model:
+  z_threshold: -0.05
