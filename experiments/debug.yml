@@ -7,8 +7,9 @@ train:
   summary_steps: 1
   shuffle: false
 model:
-  backbone: resnet50
+  backbone: vgg16
+  z_threshold: -0.1
 optim:
-  lr: 1.0E-5
+  lr: 1.0E-3
 test:
   summary_steps: 5

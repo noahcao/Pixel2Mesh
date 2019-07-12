@@ -16,3 +16,7 @@ PRETRAINED_WEIGHTS_PATH = {
 CAMERA_F = [248, 248]
 CAMERA_C = [111.5, 111.5]
 CAMERA_RES = [224, 224]
+
+# Mean and standard deviation for normalizing input image
+IMG_NORM_MEAN = [0.485, 0.456, 0.406]
+IMG_NORM_STD = [0.229, 0.224, 0.225]

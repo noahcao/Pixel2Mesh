@@ -2,7 +2,10 @@ import os
 import pickle
 
 import numpy as np
+import torch
 from torch.utils.data import Dataset
+
+from datasets.base_dataset import BaseDataset
 
 word_idx = {'02691156': 0,  # airplane
             '03636649': 1,  # lamp
@@ -11,12 +14,13 @@ word_idx = {'02691156': 0,  # airplane
 idx_class = {0: 'airplane', 1: 'lamp', 2: 'chair'}
 
 
-class ShapeNet(Dataset):
+class ShapeNet(BaseDataset):
     """
     Dataset wrapping images and target meshes for ShapeNet dataset.
     """
 
     def __init__(self, file_root, file_list_name, num_points):
+        super().__init__()
         self.file_root = file_root
         # Read file list
         with open(os.path.join(self.file_root, "meta", file_list_name + ".txt"), "r") as fp:
@@ -35,10 +39,12 @@ class ShapeNet(Dataset):
         pts = pts[choices]
         normals = normals[choices]
 
-        img = np.transpose(img, (2, 0, 1))
+        img = torch.from_numpy(np.transpose(img, (2, 0, 1)))
+        img_normalized = self.normalize_img(img)
 
         return {
-            "images": img,
+            "images": img_normalized,
+            "images_orig": img,
             "points": pts,
             "normals": normals,
             "labels": label,

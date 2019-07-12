@@ -44,7 +44,7 @@ class P2MModel(nn.Module):
             GUnpooling(ellipsoid.unpool_idx[1])
         ])
 
-        self.projection = GProjection()
+        self.projection = GProjection(options.z_threshold)
 
         self.gconv = GConv(in_features=self.hidden_dim, out_features=self.coord_dim,
                            adj_mat=ellipsoid.adj_mat[2])

@@ -110,10 +110,10 @@ class MeshRenderer(object):
         """
         Every thing is tensor for now, needs to move to cpu and convert to numpy
         """
-        batch_size = min(batch_input["images"].size(0), atmost)
+        batch_size = min(batch_input["images_orig"].size(0), atmost)
         images_stack = []
         for i in range(batch_size):
-            image = batch_input["images"][i].cpu().numpy()
+            image = batch_input["images_orig"][i].cpu().numpy()
             gt_points = batch_input["points"][i].cpu().numpy()
             for j in range(3):
                 for k in (["pred_coord_before_deform", "pred_coord"] if j == 0 else ["pred_coord"]):
