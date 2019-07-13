@@ -3,5 +3,7 @@ based_on:
 model:
   z_threshold: -0.05
 train:
+  num_epochs: 10
   summary_steps: 1
+  checkpoint_steps: 1
   shuffle: false
