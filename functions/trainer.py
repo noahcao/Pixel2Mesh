@@ -130,6 +130,10 @@ class Trainer(CheckpointRunner):
         for k, v in loss_summary.items():
             self.summary_writer.add_scalar(k, v, self.step_count)
 
+        # debug info
+        for filename in input_batch["filename"]:
+            self.logger.info(filename)
+
         # Save results to log
         self.logger.info("Epoch %03d, Step %06d/%06d, Time elapsed %s, Loss %.9f (%.9f)" % (
             self.epoch_count, self.step_count,

@@ -1,0 +1,6 @@
+based_on:
+  - baseline/lr_1e-4.yml
+model:
+  z_threshold: -0.05
+train:
+  summary_steps: 1
