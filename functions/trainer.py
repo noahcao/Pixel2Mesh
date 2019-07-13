@@ -79,15 +79,16 @@ class Trainer(CheckpointRunner):
         return recursive_detach(out), recursive_detach(loss_summary)
 
     def train(self):
-        train_data_loader = DataLoader(self.dataset,
-                                       batch_size=self.options.train.batch_size * self.options.num_gpus,
-                                       num_workers=self.options.num_workers,
-                                       pin_memory=self.options.pin_memory,
-                                       shuffle=self.options.train.shuffle)
-
         # Run training for num_epochs epochs
         for epoch in range(self.epoch_count, self.options.train.num_epochs):
             self.epoch_count += 1
+
+            # Create a new data loader for every epoch
+            train_data_loader = DataLoader(self.dataset,
+                                           batch_size=self.options.train.batch_size * self.options.num_gpus,
+                                           num_workers=self.options.num_workers,
+                                           pin_memory=self.options.pin_memory,
+                                           shuffle=self.options.train.shuffle)
 
             # Reset loss
             self.losses.reset()
