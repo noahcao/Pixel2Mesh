@@ -4,3 +4,4 @@ model:
   z_threshold: -0.05
 train:
   summary_steps: 1
+  shuffle: false
