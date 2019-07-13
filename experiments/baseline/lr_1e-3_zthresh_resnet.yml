@@ -1,0 +1,8 @@
+based_on:
+  - lr_1e-3_zthresh.yml
+model:
+  backbone: resnet50
+train:
+  batch_size: 8
+test:
+  batch_size: 8
