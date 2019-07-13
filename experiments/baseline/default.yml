@@ -1,4 +1,5 @@
 num_gpus: 8
+num_workers: 16
 train:
   batch_size: 32
 test:

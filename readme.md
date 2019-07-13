@@ -6,23 +6,28 @@
 - [x] Add batch support
 - [x] Add mesh visualization in tensorboard
 - [x] Add normal loss
-- [ ] Add evaluation
+- [x] Add evaluation
 - [ ] Train to see if everything works (not sure why it doesn't)
 
 ## Environment Preparation
 
-Basically, you will need:
+It seems that installing the following packages will automatically resolve everything in need.
 
-* Python 3.5+
-* PyTorch 1.1+
-* Cuda 9.0+
-* OpenCV
-* Scikit Image
-* EasyDict
-* PyYAML
-* TensorboardX
+```
+pytorch
+torchvision
+cudatoolkit=9.0
+opencv
+scipy
+scikit-image
+easydict
+pyyaml
+tensorboardx
+trimesh
+shapely
+```
 
-Note that this is not guaranteed to be a complete list of dependencies.
+Do `git submodule update --init` to get NeuralRenderer ready.
 
 In `external/chamfer` and `external/neural_renderer` do:
 
