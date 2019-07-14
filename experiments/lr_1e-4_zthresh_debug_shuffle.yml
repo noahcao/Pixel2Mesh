@@ -6,4 +6,4 @@ train:
   num_epochs: 10
   summary_steps: 1
   checkpoint_steps: 1
-  log_level: debug
+log_level: debug
