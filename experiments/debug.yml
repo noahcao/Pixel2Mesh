@@ -2,7 +2,7 @@ dataset:
   subset_train: train_plane
   subset_eval: test_plane
 train:
-  batch_size: 4
+  batch_size: 1
   test_epochs: 1
   summary_steps: 1
   shuffle: false
@@ -12,4 +12,5 @@ model:
 optim:
   lr: 1.0E-3
 test:
+  batch_size: 1
   summary_steps: 5

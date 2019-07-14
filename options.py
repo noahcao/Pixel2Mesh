@@ -18,6 +18,7 @@ options.num_gpus = 1
 options.pin_memory = True
 
 options.log_dir = "logs"
+options.log_level = "info"
 options.summary_dir = "summary"
 options.checkpoint_dir = "checkpoints"
 options.checkpoint = None

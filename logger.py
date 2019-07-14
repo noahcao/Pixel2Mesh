@@ -8,7 +8,12 @@ def create_logger(cfg, phase='train'):
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(filename=str(final_log_file), format=head)
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    if cfg.log_level == "info":
+        logger.setLevel(logging.INFO)
+    elif cfg.log_level == "debug":
+        logger.setLevel(logging.DEBUG)
+    else:
+        raise NotImplementedError("Log level has to be one of info and debug")
     console = logging.StreamHandler()
     logging.getLogger('').addHandler(console)
 

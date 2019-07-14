@@ -96,7 +96,7 @@ class Trainer(CheckpointRunner):
             # Iterate over all batches in an epoch
             for step, batch in enumerate(train_data_loader):
                 # Send input to GPU
-                batch = {k: v.cuda() for k, v in batch.items() if isinstance(v, torch.Tensor)}
+                batch = {k: v.cuda() if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
                 # Run training step
                 out = self.train_step(batch)
@@ -125,6 +125,9 @@ class Trainer(CheckpointRunner):
         # Do visualization for the first 2 images of the batch
         render_mesh = self.renderer.p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)
         self.summary_writer.add_image("render_mesh", render_mesh, self.step_count)
+
+        # Debug info for filenames
+        self.logger.debug(input_batch["filename"])
 
         # Save results in Tensorboard
         for k, v in loss_summary.items():
