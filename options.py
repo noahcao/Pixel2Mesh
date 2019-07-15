@@ -49,6 +49,8 @@ options.loss.weights.edge = 0.3
 options.loss.weights.laplace = 0.5
 options.loss.weights.move = 0.1
 options.loss.weights.constant = 1.
+options.loss.weights.chamfer = [1., 1., 1.]
+options.loss.weights.chamfer_opposite = 1.
 
 options.train = edict()
 options.train.num_epochs = 50

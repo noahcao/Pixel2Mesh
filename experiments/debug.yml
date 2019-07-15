@@ -17,3 +17,6 @@ test:
   summary_steps: 5
 log_level: debug
 num_workers: 1
+loss:
+  weights:
+    chamfer: [0.05, 0.4, 2.]

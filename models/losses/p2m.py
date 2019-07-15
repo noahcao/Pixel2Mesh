@@ -87,7 +87,8 @@ class P2MLoss(nn.Module):
 
         for i in range(3):
             dist1, dist2, idx1, idx2 = self.chamfer_dist(gt_coord, pred_coord[i])
-            chamfer_loss += torch.mean(dist1) + torch.mean(dist2)
+            chamfer_loss += self.options.weights.chamfer[i] * (torch.mean(dist1) +
+                                                               self.options.weights.chamfer_opposite * torch.mean(dist2))
             normal_loss += self.normal_loss(gt_normal, idx2, pred_coord[i], self.edges[i])
             edge_loss += self.edge_regularization(pred_coord[i], self.edges[i])
             lap, move = self.laplace_regularization(pred_coord_before_deform[i],
