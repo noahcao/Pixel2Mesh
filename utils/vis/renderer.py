@@ -84,7 +84,7 @@ class MeshRenderer(object):
         if np.isnan(vertices_2d).any():
             return whiteboard, alpha
         for x, y in vertices_2d:
-            cv2.circle(alpha, (x, y), radius=1, color=(1., 1., 1.), thickness=-1)
+            cv2.circle(alpha, (int(x), int(y)), radius=1, color=(1., 1., 1.), thickness=-1)
         rgb = _process_render_result(alpha * color[None, None, :], height, width)
         alpha = _process_render_result(alpha[:, :, 0], height, width)
         rgb = _mix_render_result_with_image(rgb, alpha[0], whiteboard)
@@ -112,11 +112,12 @@ class MeshRenderer(object):
         """
         batch_size = min(batch_input["images_orig"].size(0), atmost)
         images_stack = []
+        mesh_pos = np.array(config.MESH_POS)
         for i in range(batch_size):
             image = batch_input["images_orig"][i].cpu().numpy()
-            gt_points = batch_input["points"][i].cpu().numpy()
+            gt_points = batch_input["points"][i].cpu().numpy() + mesh_pos
             for j in range(3):
                 for k in (["pred_coord_before_deform", "pred_coord"] if j == 0 else ["pred_coord"]):
-                    coord = batch_output[k][j][i].cpu().numpy()
+                    coord = batch_output[k][j][i].cpu().numpy() + mesh_pos
                     images_stack.append(self.visualize_reconstruction(gt_points, coord, faces[j].cpu().numpy(), image))
         return torch.from_numpy(np.concatenate(images_stack, 1))

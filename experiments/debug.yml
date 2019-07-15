@@ -1,7 +1,8 @@
 dataset:
-  subset_train: train_plane
-  subset_eval: test_plane
+  subset_train: train_small
+  subset_eval: test_small
 train:
+  num_epochs: 8
   batch_size: 1
   test_epochs: 1
   summary_steps: 1
@@ -14,3 +15,5 @@ optim:
 test:
   batch_size: 1
   summary_steps: 5
+log_level: debug
+num_workers: 1

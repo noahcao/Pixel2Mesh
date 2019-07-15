@@ -23,6 +23,8 @@ scikit-image
 easydict
 pyyaml
 tensorboardx
+tensorboard
+tensorflow
 trimesh
 shapely
 ```

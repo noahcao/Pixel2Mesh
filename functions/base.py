@@ -78,7 +78,7 @@ class CheckpointRunner(object):
                 if optimizer_name in checkpoint:
                     optimizer.load_state_dict(checkpoint[optimizer_name])
         else:
-            self.logger.warning("Optimizers not found in checkpoint, skipping...")
+            self.logger.warning("Optimizers not found in the runner, skipping...")
         if "epoch" in checkpoint:
             self.epoch_count = checkpoint["epoch"]
         if "total_step_count" in checkpoint:

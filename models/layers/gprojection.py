@@ -34,8 +34,9 @@ class GProjection(nn.Module):
     def forward(self, img_features, inputs):
         # map to [-1, 1]
         # not sure why they render to negative x
-        w = (-config.CAMERA_F[0] * (inputs[:, :, 0] / self.bound_val(inputs[:, :, 2]))) / config.CAMERA_C[0]
-        h = (config.CAMERA_F[1] * (inputs[:, :, 1] / self.bound_val(inputs[:, :, 2]))) / config.CAMERA_C[1]
+        positions = inputs + torch.tensor(config.MESH_POS, device=inputs.device)
+        w = (-config.CAMERA_F[0] * (positions[:, :, 0] / self.bound_val(positions[:, :, 2]))) / config.CAMERA_C[0]
+        h = (config.CAMERA_F[1] * (positions[:, :, 1] / self.bound_val(positions[:, :, 2]))) / config.CAMERA_C[1]
 
         # clamp to [-1, 1]
         w = torch.clamp(w, min=-1, max=1)

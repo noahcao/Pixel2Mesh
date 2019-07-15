@@ -28,7 +28,7 @@ class Ellipsoid(object):
             fp_info = pickle.load(fp, encoding='latin1')
 
         # shape: n_pts * 3
-        self.coord = torch.tensor(fp_info[0])
+        self.coord = torch.tensor(fp_info[0]) - torch.tensor(config.MESH_POS)
 
         # edges & faces & lap_idx
         # edge: num_edges * 2

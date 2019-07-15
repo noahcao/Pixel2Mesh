@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+import config
 from datasets.base_dataset import BaseDataset
 
 word_idx = {'02691156': 0,  # airplane
@@ -33,6 +34,7 @@ class ShapeNet(BaseDataset):
             data = pickle.load(f, encoding="latin1")
 
         img, pts, normals = data[0].astype(np.float32) / 255.0, data[1][:, :3], data[1][:, 3:]
+        pts -= np.array(config.MESH_POS)
         assert pts.shape[0] == normals.shape[0]
         length = pts.shape[0]
         choices = np.resize(np.random.permutation(length), self.num_points)
