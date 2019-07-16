@@ -10,29 +10,29 @@ class VGG16P2M(nn.Module):
 
         self.features_dim = 960
 
-        self.conv0_1 = nn.Conv2d(n_classes_input, 16, 3, stride=1, padding=1)
-        self.conv0_2 = nn.Conv2d(16, 16, 3, stride=1, padding=1)
+        self.conv0_1 = nn.Conv2d(n_classes_input, 16, 3, stride=1, padding=1, padding_mode="circular")
+        self.conv0_2 = nn.Conv2d(16, 16, 3, stride=1, padding=1, padding_mode="circular")
 
-        self.conv1_1 = nn.Conv2d(16, 32, 3, stride=2, padding=1)  # 224 -> 112
-        self.conv1_2 = nn.Conv2d(32, 32, 3, stride=1, padding=1)
-        self.conv1_3 = nn.Conv2d(32, 32, 3, stride=1, padding=1)
+        self.conv1_1 = nn.Conv2d(16, 32, 3, stride=2, padding=1, padding_mode="circular")  # 224 -> 112
+        self.conv1_2 = nn.Conv2d(32, 32, 3, stride=1, padding=1, padding_mode="circular")
+        self.conv1_3 = nn.Conv2d(32, 32, 3, stride=1, padding=1, padding_mode="circular")
 
-        self.conv2_1 = nn.Conv2d(32, 64, 3, stride=2, padding=1)  # 112 -> 56
-        self.conv2_2 = nn.Conv2d(64, 64, 3, stride=1, padding=1)
-        self.conv2_3 = nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv2_1 = nn.Conv2d(32, 64, 3, stride=2, padding=1, padding_mode="circular")  # 112 -> 56
+        self.conv2_2 = nn.Conv2d(64, 64, 3, stride=1, padding=1, padding_mode="circular")
+        self.conv2_3 = nn.Conv2d(64, 64, 3, stride=1, padding=1, padding_mode="circular")
 
-        self.conv3_1 = nn.Conv2d(64, 128, 3, stride=2, padding=1)  # 56 -> 28
-        self.conv3_2 = nn.Conv2d(128, 128, 3, stride=1, padding=1)
-        self.conv3_3 = nn.Conv2d(128, 128, 3, stride=1, padding=1)
+        self.conv3_1 = nn.Conv2d(64, 128, 3, stride=2, padding=1, padding_mode="circular")  # 56 -> 28
+        self.conv3_2 = nn.Conv2d(128, 128, 3, stride=1, padding=1, padding_mode="circular")
+        self.conv3_3 = nn.Conv2d(128, 128, 3, stride=1, padding=1, padding_mode="circular")
 
-        self.conv4_1 = nn.Conv2d(128, 256, 5, stride=2, padding=2)  # 28 -> 14
-        self.conv4_2 = nn.Conv2d(256, 256, 3, stride=1, padding=1)
-        self.conv4_3 = nn.Conv2d(256, 256, 3, stride=1, padding=1)
+        self.conv4_1 = nn.Conv2d(128, 256, 5, stride=2, padding=2, padding_mode="circular")  # 28 -> 14
+        self.conv4_2 = nn.Conv2d(256, 256, 3, stride=1, padding=1, padding_mode="circular")
+        self.conv4_3 = nn.Conv2d(256, 256, 3, stride=1, padding=1, padding_mode="circular")
 
-        self.conv5_1 = nn.Conv2d(256, 512, 5, stride=2, padding=2)  # 14 -> 7
-        self.conv5_2 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
-        self.conv5_3 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
-        self.conv5_4 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
+        self.conv5_1 = nn.Conv2d(256, 512, 5, stride=2, padding=2, padding_mode="circular")  # 14 -> 7
+        self.conv5_2 = nn.Conv2d(512, 512, 3, stride=1, padding=1, padding_mode="circular")
+        self.conv5_3 = nn.Conv2d(512, 512, 3, stride=1, padding=1, padding_mode="circular")
+        self.conv5_4 = nn.Conv2d(512, 512, 3, stride=1, padding=1, padding_mode="circular")
 
     def forward(self, img):
         img = F.relu(self.conv0_1(img))
