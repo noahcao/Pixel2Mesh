@@ -9,7 +9,7 @@ class P2MLoss(nn.Module):
     def __init__(self, options, ellipsoid):
         super().__init__()
         self.options = options
-        self.l1_loss = nn.L1Loss(reduction='none')
+        self.l1_loss = nn.L1Loss(reduction='mean')
         self.l2_loss = nn.MSELoss(reduction='mean')
         self.chamfer_dist = ChamferDist()
         self.laplace_idx = nn.ParameterList([
@@ -72,6 +72,10 @@ class P2MLoss(nn.Module):
         cosine = torch.abs(torch.sum(edges * normals, 2))
         return torch.mean(cosine)
 
+    def image_loss(self, gt_img, pred_img):
+        rect_loss = F.binary_cross_entropy(pred_img, gt_img)
+        return rect_loss
+
     def forward(self, outputs, targets):
         """
         :param outputs: outputs from P2MModel
@@ -82,8 +86,11 @@ class P2MLoss(nn.Module):
         chamfer_loss, edge_loss, normal_loss, lap_loss, move_loss = 0., 0., 0., 0., 0.
         lap_const = [0.2, 1., 1.]
 
-        gt_coord, gt_normal = targets["points"], targets["normals"]
+        gt_coord, gt_normal, gt_images = targets["points"], targets["normals"], targets["images"]
         pred_coord, pred_coord_before_deform = outputs["pred_coord"], outputs["pred_coord_before_deform"]
+        image_loss = 0.
+        if outputs["reconst"] is not None:
+            image_loss = self.image_loss(gt_images, outputs["reconst"])
 
         for i in range(3):
             dist1, dist2, idx1, idx2 = self.chamfer_dist(gt_coord, pred_coord[i])
@@ -96,7 +103,7 @@ class P2MLoss(nn.Module):
             lap_loss += lap_const[i] * lap
             move_loss += lap_const[i] * move
 
-        loss = chamfer_loss + \
+        loss = chamfer_loss + image_loss * self.options.weights.reconst + \
                self.options.weights.laplace * lap_loss + \
                self.options.weights.move * move_loss + \
                self.options.weights.edge * edge_loss + \

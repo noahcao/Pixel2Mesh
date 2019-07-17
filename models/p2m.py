@@ -6,7 +6,7 @@ from models.layers.gbottleneck import GBottleneck
 from models.layers.gconv import GConv
 from models.layers.gpooling import GUnpooling
 from models.layers.gprojection import GProjection
-from models.backbones.vgg16 import VGG16P2M
+from models.backbones.vgg16 import VGG16P2M, VGG16Recons
 
 
 class P2MModel(nn.Module):
@@ -24,8 +24,10 @@ class P2MModel(nn.Module):
 
         if options.backbone == "vgg16":
             self.nn_encoder = VGG16P2M()
+            self.nn_decoder = VGG16Recons()
         elif options.backbone == "resnet50":
             self.nn_encoder = resnet50()
+            self.nn_decoder = None
         else:
             raise NotImplementedError("No implemented backbone called '%s' found" % options.backbone)
         self.features_dim = self.nn_encoder.features_dim + self.coord_dim
@@ -77,7 +79,13 @@ class P2MModel(nn.Module):
         # after deformation 3
         x3 = self.gconv(x3)
 
+        if self.nn_decoder is not None:
+            reconst = self.nn_decoder(img_feats)
+        else:
+            reconst = None
+
         return {
             "pred_coord": [x1, x2, x3],
             "pred_coord_before_deform": [init_pts, x1_up, x2_up],
+            "reconst": reconst
         }
