@@ -18,7 +18,7 @@ Source | Dataset | Chamfer | F1 (1x) | F1 (2x)
 Paper  | Full    | 0.591   | 59.72   | 74.19  
 Paper  | Plane   | 0.477   | 71.12   | 81.38
 Tong-ZHAO-Pytorch (partial) | Plane | 0.455 | 63.08 | 76.58
-Official Model (evaluated in MeshRCNN) | Full | 0.591 | 59.72 | 74.19
+Official Model (evaluated in MeshRCNN) | Full | 0.444 | 68.94 | 80.75
 Pixel2Mesh+ (MeshRCNN) | Full | 0.284 | 75.83 | 86.63
 baseline_lr_1e-4_zthresh_resnet | Three | 0.533 | 57.67 | 73.83
 baseline_lr_1e-4 | Three | 0.558 | 54.71 | 72.26
