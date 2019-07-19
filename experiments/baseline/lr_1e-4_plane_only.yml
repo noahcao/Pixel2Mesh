@@ -2,4 +2,4 @@ based_on:
   - lr_1e-4.yml
 dataset:
   subset_train: train_plane
-  subset_test: test_plane
+  subset_eval: test_plane

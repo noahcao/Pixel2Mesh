@@ -2,4 +2,4 @@ based_on:
   - lr_1e-4.yml
 dataset:
   subset_train: train_all
-  subset_test: test_all
+  subset_eval: test_all

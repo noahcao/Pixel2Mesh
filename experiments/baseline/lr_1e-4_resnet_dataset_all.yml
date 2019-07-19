@@ -8,4 +8,4 @@ test:
   batch_size: 8
 dataset:
   subset_train: train_all
-  subset_test: test_all
+  subset_eval: test_all
