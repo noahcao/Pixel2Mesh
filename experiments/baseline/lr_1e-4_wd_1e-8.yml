@@ -1,4 +1,4 @@
 based_on:
-  - lr1e-4.yml
+  - lr_1e-4.yml
 optim:
   wd: 1.0e-8

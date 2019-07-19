@@ -1,5 +1,5 @@
 based_on:
-  - lr1e-4.yml
+  - lr_1e-4.yml
 model:
   backbone: resnet50
 train:
