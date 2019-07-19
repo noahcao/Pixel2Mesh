@@ -3,8 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Threshold
 
-import config
-
 
 class GProjection(nn.Module):
     """
@@ -14,8 +12,9 @@ class GProjection(nn.Module):
     bi-linear interpolation to get the corresponding feature.
     """
 
-    def __init__(self, bound=0):
+    def __init__(self, mesh_pos, camera_f, camera_c, bound=0):
         super(GProjection, self).__init__()
+        self.mesh_pos, self.camera_f, self.camera_c = mesh_pos, camera_f, camera_c
         self.threshold = None
         self.bound = 0
         if self.bound != 0:
@@ -34,9 +33,9 @@ class GProjection(nn.Module):
     def forward(self, img_features, inputs):
         # map to [-1, 1]
         # not sure why they render to negative x
-        positions = inputs + torch.tensor(config.MESH_POS, device=inputs.device)
-        w = (-config.CAMERA_F[0] * (positions[:, :, 0] / self.bound_val(positions[:, :, 2]))) / config.CAMERA_C[0]
-        h = (config.CAMERA_F[1] * (positions[:, :, 1] / self.bound_val(positions[:, :, 2]))) / config.CAMERA_C[1]
+        positions = inputs + torch.tensor(self.mesh_pos, device=inputs.device, dtype=torch.float)
+        w = (-self.camera_f[0] * (positions[:, :, 0] / self.bound_val(positions[:, :, 2]))) / self.camera_c[0]
+        h = (self.camera_f[1] * (positions[:, :, 1] / self.bound_val(positions[:, :, 2]))) / self.camera_c[1]
 
         # clamp to [-1, 1]
         w = torch.clamp(w, min=-1, max=1)

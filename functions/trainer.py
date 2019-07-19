@@ -20,12 +20,14 @@ class Trainer(CheckpointRunner):
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):
         # create ellipsoid
-        self.ellipsoid = Ellipsoid()
+        self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
 
         if shared_model is not None:
             self.model = shared_model
         else:
-            self.model = P2MModel(self.options.model, self.ellipsoid)
+            self.model = P2MModel(self.options.model, self.ellipsoid,
+                                  self.options.dataset.camera_f, self.options.dataset.camera_c,
+                                  self.options.dataset.mesh_pos)
             self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
 
         # Setup a joint optimizer for the 2 models
@@ -45,7 +47,8 @@ class Trainer(CheckpointRunner):
         self.losses = AverageMeter()
 
         # Visualization renderer
-        self.renderer = MeshRenderer()
+        self.renderer = MeshRenderer(self.options.dataset.camera_f, self.options.dataset.camera_c,
+                                     self.options.dataset.mesh_pos)
 
         # Evaluators
         self.evaluators = [Evaluator(self.options, self.logger, self.summary_writer, shared_model=self.model)]

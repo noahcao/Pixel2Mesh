@@ -26,10 +26,11 @@ def _mix_render_result_with_image(rgb, alpha, image):
 
 class MeshRenderer(object):
 
-    def __init__(self):
+    def __init__(self, camera_f, camera_c, mesh_pos):
         self.colors = {'pink': np.array([.9, .7, .7]),
                        'light_blue': np.array([0.65098039, 0.74117647, 0.85882353])
                        }
+        self.camera_f, self.camera_c, self.mesh_pos = camera_f, camera_c, mesh_pos
         self.renderer = nr.Renderer(camera_mode='projection',
                                     light_intensity_directional=.8,
                                     light_intensity_ambient=.3,
@@ -91,8 +92,8 @@ class MeshRenderer(object):
         return rgb, alpha
 
     def visualize_reconstruction(self, gt_coord, coord, faces, image):
-        camera_k = np.array([[config.CAMERA_F[0], 0, config.CAMERA_C[0]],
-                             [0, config.CAMERA_F[1], config.CAMERA_C[1]],
+        camera_k = np.array([[self.camera_f[0], 0, self.camera_c[0]],
+                             [0, self.camera_f[1], self.camera_c[1]],
                              [0, 0, 1]])
         # inverse y and z, equivalent to inverse x, but gives positive z
         rvec = np.array([np.pi, 0., 0.], dtype=np.float32)
@@ -112,7 +113,7 @@ class MeshRenderer(object):
         """
         batch_size = min(batch_input["images_orig"].size(0), atmost)
         images_stack = []
-        mesh_pos = np.array(config.MESH_POS)
+        mesh_pos = np.array(self.mesh_pos)
         for i in range(batch_size):
             image = batch_input["images_orig"][i].cpu().numpy()
             gt_points = batch_input["points"][i].cpu().numpy() + mesh_pos

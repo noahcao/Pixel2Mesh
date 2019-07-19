@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from models.backbones.resnet import resnet50
 from models.layers.gbottleneck import GBottleneck
@@ -14,11 +15,12 @@ class P2MModel(nn.Module):
     Implement the joint model for Pixel2mesh
     """
 
-    def __init__(self, options, ellipsoid):
+    def __init__(self, options, ellipsoid, camera_f, camera_c, mesh_pos):
         super(P2MModel, self).__init__()
 
         self.hidden_dim = options.hidden_dim
         self.coord_dim = options.coord_dim
+        self.last_hidden_dim = options.last_hidden_dim
         self.init_pts = nn.Parameter(ellipsoid.coord, requires_grad=False)
         self.gconv_activation = options.gconv_activation
 
@@ -37,7 +39,7 @@ class P2MModel(nn.Module):
                         ellipsoid.adj_mat[0], activation=self.gconv_activation),
             GBottleneck(6, self.features_dim + self.hidden_dim, self.hidden_dim, self.coord_dim,
                         ellipsoid.adj_mat[1], activation=self.gconv_activation),
-            GBottleneck(6, self.features_dim + self.hidden_dim, self.hidden_dim, self.hidden_dim,
+            GBottleneck(6, self.features_dim + self.hidden_dim, self.hidden_dim, self.last_hidden_dim,
                         ellipsoid.adj_mat[2], activation=self.gconv_activation)
         ])
 
@@ -46,9 +48,9 @@ class P2MModel(nn.Module):
             GUnpooling(ellipsoid.unpool_idx[1])
         ])
 
-        self.projection = GProjection(options.z_threshold)
+        self.projection = GProjection(mesh_pos, camera_f, camera_c, bound=options.z_threshold)
 
-        self.gconv = GConv(in_features=self.hidden_dim, out_features=self.coord_dim,
+        self.gconv = GConv(in_features=self.last_hidden_dim, out_features=self.coord_dim,
                            adj_mat=ellipsoid.adj_mat[2])
 
     def forward(self, img):
@@ -65,7 +67,7 @@ class P2MModel(nn.Module):
 
         # GCN Block 2
         x = self.projection(img_feats, x1)
-        x = self.unpooling[0](torch.cat([x, x_hidden], 2))
+        x = self.unpooling[0](torch.cat([x_hidden, x], 2))
         # after deformation 2
         x2, x_hidden = self.gcns[1](x)
 
@@ -74,8 +76,10 @@ class P2MModel(nn.Module):
 
         # GCN Block 3
         x = self.projection(img_feats, x2)
-        x = self.unpooling[1](torch.cat([x, x_hidden], 2))
+        x = self.unpooling[1](torch.cat([x_hidden, x], 2))
         x3, _ = self.gcns[2](x)
+        if self.gconv_activation:
+            x3 = F.relu(x3)
         # after deformation 3
         x3 = self.gconv(x3)
 

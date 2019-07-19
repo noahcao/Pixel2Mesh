@@ -1,22 +1,18 @@
 dataset:
-  subset_train: train_small
-  subset_eval: test_small
+  subset_train: train_plane
+  subset_eval: test_plane
   mesh_pos: [0., 0., 0.]
-  camera_f: [250., 250.]
-  camera_c: [112., 112.]
   normalization: false
 train:
   num_epochs: 8
   batch_size: 1
   test_epochs: 1
   summary_steps: 1
-  checkpoint_steps: 1
   shuffle: false
 model:
-  hidden_dim: 256
-  last_hidden_dim: 128
   backbone: vgg16
-  z_threshold: 0
+  z_threshold: -0.1
+  gconv_activation: false
 optim:
   lr: 1.0E-3
 test:

@@ -21,16 +21,19 @@ class Evaluator(CheckpointRunner):
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):
         # create ellipsoid
-        self.ellipsoid = Ellipsoid()
+        self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
 
         if shared_model is not None:
             self.model = shared_model
         else:
-            self.model = P2MModel(self.options.model, self.ellipsoid)
+            self.model = P2MModel(self.options.model, self.ellipsoid,
+                                  self.options.dataset.camera_f, self.options.dataset.camera_c,
+                                  self.options.dataset.mesh_pos)
             self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
 
         # Renderer for visualization
-        self.renderer = MeshRenderer()
+        self.renderer = MeshRenderer(self.options.dataset.camera_f, self.options.dataset.camera_c,
+                                     self.options.dataset.mesh_pos)
 
         # Initialize distance module
         self.chamfer = ChamferDist()
@@ -71,7 +74,7 @@ class Evaluator(CheckpointRunner):
         # Run inference
         with torch.no_grad():
             out = self.model(images)
-            pred_vertices = out["pred_coord"][-1]
+            pred_vertices = out["pred_coord"][0]
 
             self.evaluate_chamfer_and_f1(pred_vertices, gt_points, gt_length)
 
