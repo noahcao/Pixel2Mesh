@@ -1,0 +1,4 @@
+based_on:
+  - lr_1e-4_k250_d256.yml
+model:
+  backbone: resnet50

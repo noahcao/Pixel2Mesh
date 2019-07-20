@@ -1,30 +1,21 @@
 dataset:
   subset_train: train_small
   subset_eval: test_small
-  mesh_pos: [0., 0., 0.]
   camera_f: [250., 250.]
-  camera_c: [112., 112.]
-  normalization: false
 train:
   num_epochs: 8
-  batch_size: 1
+  batch_size: 2
   test_epochs: 1
   summary_steps: 1
-  checkpoint_steps: 1
   shuffle: true
 model:
   hidden_dim: 256
   last_hidden_dim: 128
   backbone: vgg16
   z_threshold: 0
-  align_with_tensorflow: true
 optim:
-  lr: 1.0E-3
+  lr: 1.0E-4
 test:
   batch_size: 2
   summary_steps: 5
-log_level: debug
 num_workers: 1
-loss:
-  weights:
-    chamfer: [0.05, 0.4, 2.]
