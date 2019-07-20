@@ -29,7 +29,6 @@ options.dataset.subset_train = "train_small"
 options.dataset.subset_eval = "test_small"
 options.dataset.camera_f = [248., 248.]
 options.dataset.camera_c = [111.5, 111.5]
-options.dataset.camera_res = [224., 224.]
 options.dataset.mesh_pos = [0., 0., -0.8]
 options.dataset.normalization = True
 
