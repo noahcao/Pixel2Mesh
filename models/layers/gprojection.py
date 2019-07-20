@@ -36,8 +36,7 @@ class GProjection(nn.Module):
     def image_feature_shape(img):
         return np.array([img.size(-1), img.size(-2)])
 
-    def forward(self, img, img_features, inputs):
-        resolution = self.image_feature_shape(img)
+    def forward(self, resolution, img_features, inputs):
         half_resolution = (resolution - 1) / 2
         camera_c_offset = np.array(self.camera_c) - half_resolution
         # map to [-1, 1]
