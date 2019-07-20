@@ -18,8 +18,8 @@ Source | Dataset | Chamfer | F1 (1x) | F1 (2x)
 Paper  | Full    | 0.591   | 59.72   | 74.19  
 Paper  | Plane   | 0.477   | 71.12   | 81.38
 Tong-ZHAO-Pytorch (partial) | Plane | 0.455 | 63.08 | 76.58
-Official Model (evaluated in MeshRCNN) | Full | 0.444 | 68.94 | 80.75
-Official Model (our evaluation) | Full | ? | ? | ?
+Official Model (evaluated by MeshRCNN) | Full | 0.444 | 68.94 | 80.75
+Official Model (our evaluation, our implementation in this repo) | Full | 0.467 | 63.11 | 78.74
 Pixel2Mesh+ (MeshRCNN) | Full | 0.284 | 75.83 | 86.63
 baseline_lr_1e-4_zthresh_resnet | Three | 0.481 | 62.34 | 76.96
 baseline_lr_1e-4 | Three | 0.558 | 54.71 | 72.26
@@ -84,14 +84,23 @@ datasets/data
 
 ## Training
 
-Train locally:
-
 ```
-python entrypoint_train.py --name whatever_you_want_to_call_it --options experiments/baseline_single.yml
+python entrypoint_train.py --name whatever_you_want_to_call_it --options experiments/baseline/lr_1e-4.yml
 ```
 
-Train with slurm:
+## Evaluation
+
+To evaluate the original trained model, you can download the model from the [author's repo](https://github.com/nywang16/Pixel2Mesh),
+and convert the model into our checkpoint using the tools provided in `utils/migrations`; or you can directly downloaded 
+our converted model [here](to be added).
+
+Then run
 
 ```
-python entrypoint_train.py --name whatever_you_want_to_call_it --options experiments/baseline.yml
+python entrypoint_eval.py --name whatever_you_want_to_call_it --options experiments/tensorflow_align.yml --checkpoint /path/to/your/checkpoint
 ```
+
+Evaluation other checkpoints should be pretty much similar. We also provide a checkpoint converted from [another PyTorch version of Pixel2Mesh](https://github.com/Tong-ZHAO/Pixel2Mesh-Pytorch).
+You can download from [here](to be added).
+
+

@@ -127,7 +127,8 @@ def gen_options(options_file):
 
 def slugify(filename):
     filename = os.path.relpath(filename, ".")
-    filename = filename.lstrip("experiments/")
+    if filename.startswith("experiments/"):
+        filename = filename[len("experiments/"):]
     return os.path.splitext(filename)[0].lower().replace("/", "_").replace(".", "_")
 
 
