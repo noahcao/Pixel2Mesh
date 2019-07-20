@@ -22,6 +22,7 @@ for pt, tf in zip(pt_names, tf_names):
         data = np.transpose(official[tf], (3, 2, 0, 1))
     else:
         data = official[tf]
+    print(pt, tf, host["model"][pt].data.shape, data.shape)
     host["model"][pt].data = torch.from_numpy(data)
 
 torch.save(host, "checkpoints/debug/migration/network_official.pt")

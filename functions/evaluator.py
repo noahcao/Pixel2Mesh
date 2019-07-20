@@ -74,7 +74,7 @@ class Evaluator(CheckpointRunner):
         # Run inference
         with torch.no_grad():
             out = self.model(images)
-            pred_vertices = out["pred_coord"][0]
+            pred_vertices = out["pred_coord"][-1]
 
             self.evaluate_chamfer_and_f1(pred_vertices, gt_points, gt_length)
 

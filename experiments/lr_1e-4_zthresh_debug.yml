@@ -1,9 +1,0 @@
-based_on:
-  - baseline/lr_1e-4.yml
-model:
-  z_threshold: -0.05
-train:
-  num_epochs: 10
-  summary_steps: 1
-  checkpoint_steps: 1
-  shuffle: false

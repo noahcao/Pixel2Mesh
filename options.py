@@ -47,6 +47,9 @@ options.model.gconv_activation = True
 # if z is greater than 0, it will never be less than z;
 # if z is less than 0, it will never be greater than z.
 options.model.z_threshold = 0
+# align with original tensorflow model
+# please follow experiments/tensorflow.yml
+options.model.align_with_tensorflow = False
 
 options.loss = edict()
 options.loss.weights = edict()
@@ -72,7 +75,7 @@ options.test = edict()
 options.test.dataset = []
 options.test.summary_steps = 50
 options.test.batch_size = 4
-options.test.shuffle = True
+options.test.shuffle = False
 
 options.optim = edict()
 options.optim.adam_beta1 = 0.9
