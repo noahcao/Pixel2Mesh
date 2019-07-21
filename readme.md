@@ -23,6 +23,8 @@ Official Model (our evaluation, our implementation in this repo) | Full | 0.467 
 Pixel2Mesh+ (MeshRCNN) | Full | 0.284 | 75.83 | 86.63
 baseline_lr_1e-4_zthresh_resnet | Three | 0.481 | 62.34 | 76.96
 baseline_lr_1e-4 | Three | 0.558 | 54.71 | 72.26
+baseline_lr_1e-4_resnet | All | 0.467 | 60.20 | 76.60
+baseline_lr_1e-4_plane (not complete) | Plane | 0.388 | 65.13 | 81.28
 
 More models still training...
 
