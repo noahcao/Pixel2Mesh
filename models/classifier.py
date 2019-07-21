@@ -11,10 +11,10 @@ class Classifier(nn.Module):
         self.nn_encoder, self.nn_decoder = get_backbone(options)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        self.fc = nn.Linear(self.nn_encoder.children()[-1].out_channels, num_classes)
+        self.fc = nn.Linear(list(self.nn_encoder.children())[-1].out_channels, num_classes)
 
     def forward(self, img):
-        features = self.nn_encoder(img)
+        features = self.nn_encoder(img)[-1]  # last layer
         pooling = self.avgpool(features)
         output = self.fc(pooling.reshape(pooling.size(0), -1))
         return output

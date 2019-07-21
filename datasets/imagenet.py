@@ -1,10 +1,13 @@
 import os
 
-import cv2
 import numpy as np
 
 from torch.utils.data import Dataset
 from torchvision import transforms
+
+from PIL import ImageFile, Image
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class ImageNet(Dataset):
@@ -28,9 +31,14 @@ class ImageNet(Dataset):
         ])
 
     def __getitem__(self, index):
-        image = cv2.imread(os.path.join(self.image_dir, self.images[index]))[:, :, ::-1]
-        image = np.transpose(image, (2, 0, 1)).astype(np.float) / 255.0
+        image = Image.open(os.path.join(self.image_dir, self.images[index]))
+        image = image.convert('RGB')
+        image = self.transform(image)
         return {
             "images": image,
-            "targets": self.labels[index]
+            "labels": self.labels[index],
+            "filename": self.images[index],
         }
+
+    def __len__(self):
+        return len(self.images)

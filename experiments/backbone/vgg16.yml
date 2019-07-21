@@ -2,9 +2,7 @@ dataset:
   name: imagenet
 train:
   num_epochs: 90
-  batch_size: 2
-  test_epochs: 1
-  summary_steps: 5
+  batch_size: 24
 model:
   name: classifier
   backbone: vgg16
@@ -14,6 +12,6 @@ optim:
     - 30
     - 60
 test:
-  batch_size: 2
-  summary_steps: 5
-num_workers: 1
+  batch_size: 24
+num_workers: 16
+num_gpus: 8

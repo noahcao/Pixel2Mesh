@@ -10,7 +10,7 @@ class CrossEntropyLoss(nn.Module):
     def forward(self, outputs, targets):
         labels = targets["labels"]
         loss = self.cross_entropy(outputs, labels)
-        _, predicted = torch.max(loss.data, 1)
+        _, predicted = torch.max(outputs.data, 1)
         total = labels.size(0)
         correct = (predicted == labels).sum().item()
-        return loss, {"loss": loss, "acc": total / correct}
+        return loss, {"loss": loss, "acc": correct / total}
