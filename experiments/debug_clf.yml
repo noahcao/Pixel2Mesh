@@ -7,7 +7,7 @@ train:
   summary_steps: 5
 model:
   name: classifier
-  backbone: resnet50
+  backbone: vgg16
 optim:
   lr: 1.0e-3
   lr_step:
