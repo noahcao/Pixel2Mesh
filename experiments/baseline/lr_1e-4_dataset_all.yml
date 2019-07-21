@@ -1,0 +1,12 @@
+based_on:
+  - lr_1e-4.yml
+dataset:
+  subset_train: train_all
+  subset_eval: test_all
+optim:
+  lr_factor: 0.2
+  lr_step:
+    - 25
+    - 45
+train:
+  num_epochs: 60

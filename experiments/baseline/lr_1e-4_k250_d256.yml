@@ -1,0 +1,7 @@
+based_on:
+  - lr_1e-4_dataset_all.yml
+model:
+  hidden_dim: 256
+  last_hidden_dim: 128
+dataset:
+  camera_f: [250., 250.]

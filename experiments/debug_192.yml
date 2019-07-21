@@ -1,0 +1,25 @@
+dataset:
+  subset_train: train_plane
+  subset_eval: test_plane
+  mesh_pos: [0., 0., 0.]
+  normalization: false
+train:
+  num_epochs: 8
+  batch_size: 1
+  test_epochs: 1
+  summary_steps: 1
+  shuffle: false
+model:
+  backbone: vgg16
+  z_threshold: -0.1
+  gconv_activation: false
+optim:
+  lr: 1.0E-3
+test:
+  batch_size: 1
+  summary_steps: 5
+log_level: debug
+num_workers: 1
+loss:
+  weights:
+    chamfer: [0.05, 0.4, 2.]

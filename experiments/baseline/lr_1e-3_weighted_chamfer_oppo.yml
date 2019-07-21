@@ -1,0 +1,4 @@
+based_on:
+  - lr_1e-4_weighted_chamfer_oppo.yml
+optim:
+  lr: 1.0E-3

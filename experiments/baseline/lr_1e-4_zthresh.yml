@@ -1,0 +1,4 @@
+based_on:
+  - lr_1e-4.yml
+model:
+  z_threshold: -0.05

@@ -1,0 +1,4 @@
+based_on:
+  - lr_1e-4_zthresh_resnet.yml
+optim:
+  lr: 5.0e-4

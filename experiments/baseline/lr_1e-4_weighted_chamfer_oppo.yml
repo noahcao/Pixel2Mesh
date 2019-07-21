@@ -1,0 +1,5 @@
+based_on:
+  - lr_1e-4.yml
+loss:
+  weights:
+    chamfer_opposite: 0.55

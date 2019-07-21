@@ -1,0 +1,11 @@
+based_on:
+  - lr_1e-4.yml
+train:
+  num_epochs: 100
+optim:
+  lr_step:
+    - 60
+    - 90
+dataset:
+  subset_train: train_plane
+  subset_eval: test_plane

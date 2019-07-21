@@ -1,0 +1,8 @@
+based_on:
+  - default.yml
+model:
+  backbone: resnet50
+train:
+  batch_size: 8
+test:
+  batch_size: 8

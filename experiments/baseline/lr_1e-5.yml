@@ -1,0 +1,4 @@
+based_on:
+  - default.yml
+optim:
+  lr: 1.0E-5
