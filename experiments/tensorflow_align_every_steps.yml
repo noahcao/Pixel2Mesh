@@ -1,0 +1,7 @@
+based_on:
+  - tensorflow_align.yml
+train:
+  summary_steps: 1
+  num_epochs: 1
+optim:
+  lr: 5.0e-6
