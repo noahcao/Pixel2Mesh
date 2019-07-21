@@ -21,12 +21,21 @@ class Evaluator(CheckpointRunner):
 
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):
+        if self.options.model.name == "pixel2mesh":
+            # Renderer for visualization
+            self.renderer = MeshRenderer(self.options.dataset.camera_f, self.options.dataset.camera_c,
+                                         self.options.dataset.mesh_pos)
+            # Initialize distance module
+            self.chamfer = ChamferDist()
+            # create ellipsoid
+            self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
+        else:
+            self.renderer = None
+
         if shared_model is not None:
             self.model = shared_model
         else:
             if self.options.model.name == "pixel2mesh":
-                # create ellipsoid
-                self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
                 # create model
                 self.model = P2MModel(self.options.model, self.ellipsoid,
                                       self.options.dataset.camera_f, self.options.dataset.camera_c,
@@ -36,15 +45,6 @@ class Evaluator(CheckpointRunner):
             else:
                 raise NotImplementedError("Your model is not found")
             self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
-
-        if self.options.model.name == "pixel2mesh":
-            # Renderer for visualization
-            self.renderer = MeshRenderer(self.options.dataset.camera_f, self.options.dataset.camera_c,
-                                         self.options.dataset.mesh_pos)
-            # Initialize distance module
-            self.chamfer = ChamferDist()
-        else:
-            self.renderer = None
 
         # Evaluate step count, useful in summary
         self.evaluate_step_count = 0

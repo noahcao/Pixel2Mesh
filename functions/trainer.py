@@ -21,13 +21,19 @@ class Trainer(CheckpointRunner):
 
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):
+        if self.options.model.name == "pixel2mesh":
+            # Visualization renderer
+            self.renderer = MeshRenderer(self.options.dataset.camera_f, self.options.dataset.camera_c,
+                                         self.options.dataset.mesh_pos)
+            # create ellipsoid
+            self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
+        else:
+            self.renderer = None
 
         if shared_model is not None:
             self.model = shared_model
         else:
             if self.options.model.name == "pixel2mesh":
-                # create ellipsoid
-                self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
                 # create model
                 self.model = P2MModel(self.options.model, self.ellipsoid,
                                       self.options.dataset.camera_f, self.options.dataset.camera_c,
@@ -58,13 +64,6 @@ class Trainer(CheckpointRunner):
 
         # Create AverageMeters for losses
         self.losses = AverageMeter()
-
-        # Visualization renderer
-        if self.options.model.name == "pixel2mesh":
-            self.renderer = MeshRenderer(self.options.dataset.camera_f, self.options.dataset.camera_c,
-                                         self.options.dataset.mesh_pos)
-        else:
-            self.renderer = None
 
         # Evaluators
         self.evaluators = [Evaluator(self.options, self.logger, self.summary_writer, shared_model=self.model)]
