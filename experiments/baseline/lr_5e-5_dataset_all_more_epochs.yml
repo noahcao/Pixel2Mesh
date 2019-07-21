@@ -1,0 +1,11 @@
+based_on:
+  - lr_1e-4_dataset_all.yml
+optim:
+  lr: 5.0e-5
+  lr_factor: 0.2
+  lr_step:
+    - 40
+    - 70
+    - 90
+train:
+  num_epochs: 100
