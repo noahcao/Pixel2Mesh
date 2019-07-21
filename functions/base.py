@@ -7,6 +7,7 @@ import torch.nn
 from tensorboardX import SummaryWriter
 
 import config
+from datasets.imagenet import ImageNet
 from datasets.shapenet import ShapeNet
 from functions.saver import CheckpointSaver
 
@@ -49,6 +50,8 @@ class CheckpointRunner(object):
         if dataset.name == "shapenet":
             return ShapeNet(config.SHAPENET_ROOT, dataset.subset_train if training else dataset.subset_eval,
                             self.options.dataset.shapenet.num_points, dataset.mesh_pos, dataset.normalization)
+        elif dataset.name == "imagenet":
+            return ImageNet(config.IMAGENET_ROOT, "train" if training else "val")
         raise NotImplementedError("Unsupported dataset")
 
     def init_fn(self, shared_model=None, **kwargs):

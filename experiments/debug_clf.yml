@@ -1,6 +1,6 @@
 dataset:
   subset_train: train_small
-  subset_eval: test_plane
+  subset_eval: test_small
   camera_f: [250., 250.]
 train:
   num_epochs: 8

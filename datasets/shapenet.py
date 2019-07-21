@@ -6,12 +6,6 @@ import torch
 
 from datasets.base_dataset import BaseDataset
 
-word_idx = {'02691156': 0,  # airplane
-            '03636649': 1,  # lamp
-            '03001627': 2}  # chair
-
-idx_class = {0: 'airplane', 1: 'lamp', 2: 'chair'}
-
 
 class ShapeNet(BaseDataset):
     """

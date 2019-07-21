@@ -2,12 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.backbones.resnet import resnet50
+from models.backbones import get_backbone
 from models.layers.gbottleneck import GBottleneck
 from models.layers.gconv import GConv
 from models.layers.gpooling import GUnpooling
 from models.layers.gprojection import GProjection
-from models.backbones.vgg16 import VGG16P2M, VGG16Recons, VGG16TensorflowAlign
 
 
 class P2MModel(nn.Module):
@@ -21,17 +20,7 @@ class P2MModel(nn.Module):
         self.init_pts = nn.Parameter(ellipsoid.coord, requires_grad=False)
         self.gconv_activation = options.gconv_activation
 
-        if options.backbone == "vgg16":
-            if options.align_with_tensorflow:
-                self.nn_encoder = VGG16TensorflowAlign()
-            else:
-                self.nn_encoder = VGG16P2M()
-            self.nn_decoder = VGG16Recons()
-        elif options.backbone == "resnet50":
-            self.nn_encoder = resnet50()
-            self.nn_decoder = None
-        else:
-            raise NotImplementedError("No implemented backbone called '%s' found" % options.backbone)
+        self.nn_encoder, self.nn_decoder = get_backbone(options)
         self.features_dim = self.nn_encoder.features_dim + self.coord_dim
 
         self.gcns = nn.ModuleList([

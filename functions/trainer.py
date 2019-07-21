@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader
 
 from functions.base import CheckpointRunner
 from functions.evaluator import Evaluator
+from models.classifier import Classifier
+from models.losses.classifier import CrossEntropyLoss
 from models.losses.p2m import P2MLoss
 from models.p2m import P2MModel
 from utils.average_meter import AverageMeter
@@ -19,15 +21,21 @@ class Trainer(CheckpointRunner):
 
     # noinspection PyAttributeOutsideInit
     def init_fn(self, shared_model=None, **kwargs):
-        # create ellipsoid
-        self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
 
         if shared_model is not None:
             self.model = shared_model
         else:
-            self.model = P2MModel(self.options.model, self.ellipsoid,
-                                  self.options.dataset.camera_f, self.options.dataset.camera_c,
-                                  self.options.dataset.mesh_pos)
+            if self.options.model.name == "pixel2mesh":
+                # create ellipsoid
+                self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
+                # create model
+                self.model = P2MModel(self.options.model, self.ellipsoid,
+                                      self.options.dataset.camera_f, self.options.dataset.camera_c,
+                                      self.options.dataset.mesh_pos)
+            elif self.options.model.name == "classifier":
+                self.model = Classifier(self.options.model, self.options.dataset.num_classes)
+            else:
+                raise NotImplementedError("Your model is not found")
             self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
 
         # Setup a joint optimizer for the 2 models
@@ -41,14 +49,22 @@ class Trainer(CheckpointRunner):
         )
 
         # Create loss functions
-        self.criterion = P2MLoss(self.options.loss, self.ellipsoid).cuda()
+        if self.options.model.name == "pixel2mesh":
+            self.criterion = P2MLoss(self.options.loss, self.ellipsoid).cuda()
+        elif self.options.model.name == "classifier":
+            self.criterion = CrossEntropyLoss()
+        else:
+            raise NotImplementedError("Your loss is not found")
 
         # Create AverageMeters for losses
         self.losses = AverageMeter()
 
         # Visualization renderer
-        self.renderer = MeshRenderer(self.options.dataset.camera_f, self.options.dataset.camera_c,
-                                     self.options.dataset.mesh_pos)
+        if self.options.model.name == "pixel2mesh":
+            self.renderer = MeshRenderer(self.options.dataset.camera_f, self.options.dataset.camera_c,
+                                         self.options.dataset.mesh_pos)
+        else:
+            self.renderer = None
 
         # Evaluators
         self.evaluators = [Evaluator(self.options, self.logger, self.summary_writer, shared_model=self.model)]
@@ -125,9 +141,10 @@ class Trainer(CheckpointRunner):
             self.lr_scheduler.step()
 
     def train_summaries(self, input_batch, out_summary, loss_summary):
-        # Do visualization for the first 2 images of the batch
-        render_mesh = self.renderer.p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)
-        self.summary_writer.add_image("render_mesh", render_mesh, self.step_count)
+        if self.renderer is not None:
+            # Do visualization for the first 2 images of the batch
+            render_mesh = self.renderer.p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)
+            self.summary_writer.add_image("render_mesh", render_mesh, self.step_count)
 
         # Debug info for filenames
         self.logger.debug(input_batch["filename"])
