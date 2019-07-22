@@ -92,8 +92,7 @@ python entrypoint_train.py --name whatever_you_want_to_call_it --options experim
 
 ## Evaluation
 
-To evaluate the original trained model, you can download the model from the [author's repo](https://github.com/nywang16/Pixel2Mesh),
-and convert the model into our checkpoint using the tools provided in `utils/migrations`; or you can directly downloaded 
+To evaluate the original trained model, you can download the model from the [author's repo](https://github.com/nywang16/Pixel2Mesh), and convert the model into our checkpoint using the tools provided in `utils/migrations`; or you can directly downloaded 
 our converted model [here](to be added).
 
 Then run
