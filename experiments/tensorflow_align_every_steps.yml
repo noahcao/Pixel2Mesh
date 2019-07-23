@@ -4,4 +4,4 @@ train:
   summary_steps: 1
   num_epochs: 2
 optim:
-  lr: 5.0e-6
+  lr: 5.0e-7
