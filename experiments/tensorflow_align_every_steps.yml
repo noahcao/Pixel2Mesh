@@ -3,5 +3,10 @@ based_on:
 train:
   summary_steps: 1
   num_epochs: 2
+loss:
+  weights:
+    chamfer_opposite: 0.55
+    edge: 0.1
+    move: 0.033
 optim:
   lr: 5.0e-7
