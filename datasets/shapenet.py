@@ -3,6 +3,7 @@ import pickle
 
 import numpy as np
 import torch
+from torch.utils.data.dataloader import default_collate
 
 from datasets.base_dataset import BaseDataset
 
@@ -12,13 +13,12 @@ class ShapeNet(BaseDataset):
     Dataset wrapping images and target meshes for ShapeNet dataset.
     """
 
-    def __init__(self, file_root, file_list_name, num_points, mesh_pos, normalization):
+    def __init__(self, file_root, file_list_name, mesh_pos, normalization):
         super().__init__()
         self.file_root = file_root
         # Read file list
         with open(os.path.join(self.file_root, "meta", file_list_name + ".txt"), "r") as fp:
             self.file_names = fp.read().split("\n")[:-1]
-        self.num_points = num_points
         self.normalization = normalization
         self.mesh_pos = mesh_pos
 
@@ -31,9 +31,6 @@ class ShapeNet(BaseDataset):
         pts -= np.array(self.mesh_pos)
         assert pts.shape[0] == normals.shape[0]
         length = pts.shape[0]
-        choices = np.resize(np.random.permutation(length), self.num_points)
-        pts = pts[choices]
-        normals = normals[choices]
 
         img = torch.from_numpy(np.transpose(img, (2, 0, 1)))
         img_normalized = self.normalize_img(img) if self.normalization else img
@@ -50,3 +47,26 @@ class ShapeNet(BaseDataset):
 
     def __len__(self):
         return len(self.file_names)
+
+
+def get_shapenet_collate(num_points):
+    """
+    :param num_points: This option will not be activated when batch size = 1
+    :return: shapenet_collate function
+    """
+    def shapenet_collate(batch):
+        if len(batch) > 1:
+            all_equal = True
+            for t in batch:
+                if t["length"] != batch[0]["length"]:
+                    all_equal = False
+                    break
+            if not all_equal:
+                for t in batch:
+                    pts, normal = t["points"], t["normals"]
+                    length = pts.shape[0]
+                    choices = np.resize(np.random.permutation(length), num_points)
+                    t["points"], t["normals"] = pts[choices], normal[choices]
+        return default_collate(batch)
+
+    return shapenet_collate

@@ -106,7 +106,8 @@ class Trainer(CheckpointRunner):
                                            batch_size=self.options.train.batch_size * self.options.num_gpus,
                                            num_workers=self.options.num_workers,
                                            pin_memory=self.options.pin_memory,
-                                           shuffle=self.options.train.shuffle)
+                                           shuffle=self.options.train.shuffle,
+                                           collate_fn=self.dataset_collate_fn)
 
             # Reset loss
             self.losses.reset()

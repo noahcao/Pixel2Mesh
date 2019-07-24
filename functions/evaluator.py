@@ -120,7 +120,8 @@ class Evaluator(CheckpointRunner):
                                       batch_size=self.options.test.batch_size * self.options.num_gpus,
                                       num_workers=self.options.num_workers,
                                       pin_memory=self.options.pin_memory,
-                                      shuffle=self.options.test.shuffle)
+                                      shuffle=self.options.test.shuffle,
+                                      collate_fn=self.dataset_collate_fn)
 
         if self.options.model.name == "pixel2mesh":
             self.chamfer_distance = AverageMeter()
@@ -168,11 +169,11 @@ class Evaluator(CheckpointRunner):
 
     def evaluate_summaries(self, input_batch, out_summary):
         self.logger.info("Test Step %06d/%06d (%06d) " % (self.evaluate_step_count,
-                                                 len(self.dataset) // (
-                                                         self.options.num_gpus * self.options.test.batch_size),
-                                                               self.total_step_count,) \
-            + ", ".join([key + " " + (str(val) if isinstance(val, AverageMeter) else "%.6f" % val)
-                         for key, val in self.get_result_summary().items()]))
+                                                          len(self.dataset) // (
+                                                                  self.options.num_gpus * self.options.test.batch_size),
+                                                          self.total_step_count,) \
+                         + ", ".join([key + " " + (str(val) if isinstance(val, AverageMeter) else "%.6f" % val)
+                                      for key, val in self.get_result_summary().items()]))
 
         if self.renderer is not None:
             # Do visualization for the first 2 images of the batch

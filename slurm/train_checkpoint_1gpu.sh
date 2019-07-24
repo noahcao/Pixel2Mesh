@@ -14,7 +14,7 @@ CHECKPOINT=$4
 
 srun -p ${PARTITION} \
     --job-name=Mesh \
-    --gres=gpu:8 \
+    --gres=gpu:1 \
     --ntasks=1 \
     --kill-on-bad-exit=1 \
     python entrypoint_train.py --name ${NAME} --options ${OPTIONS} --checkpoint ${CHECKPOINT} &
