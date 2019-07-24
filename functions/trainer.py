@@ -145,6 +145,8 @@ class Trainer(CheckpointRunner):
             # Do visualization for the first 2 images of the batch
             render_mesh = self.renderer.p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)
             self.summary_writer.add_image("render_mesh", render_mesh, self.step_count)
+            self.summary_writer.add_histogram("length_distribution", input_batch["length"].cpu().numpy(),
+                                              self.step_count)
 
         # Debug info for filenames
         self.logger.debug(input_batch["filename"])
