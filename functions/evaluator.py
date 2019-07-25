@@ -102,6 +102,8 @@ class Evaluator(CheckpointRunner):
             if self.options.model.name == "pixel2mesh":
                 pred_vertices = out["pred_coord"][-1]
                 gt_points = input_batch["points_orig"]
+                if isinstance(gt_points, list):
+                    gt_points = [pts.cuda() for pts in gt_points]
                 self.evaluate_chamfer_and_f1(pred_vertices, gt_points)
             elif self.options.model.name == "classifier":
                 self.evaluate_accuracy(out, input_batch["labels"])

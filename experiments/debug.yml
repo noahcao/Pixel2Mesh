@@ -25,7 +25,7 @@ loss:
     edge: 0.1
     move: 0.033
 test:
-  batch_size: 24
+  batch_size: 4
   summary_steps: 5
 optim:
   lr: 1.0e-5
@@ -33,3 +33,4 @@ optim:
     - 10
     - 20
   lr_factor: 0.5
+num_gpus: 4
