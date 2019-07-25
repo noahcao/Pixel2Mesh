@@ -40,6 +40,7 @@ class CheckpointRunner(object):
         # override this function to define your model, optimizers etc.
         # in case you want to use a model that is defined in a trainer or other place in the code,
         # shared_model should help. in this case, checkpoint is not used
+        self.logger.info("Running model initialization...")
         self.init_fn(shared_model=shared_model)
 
         if shared_model is None:
@@ -49,6 +50,7 @@ class CheckpointRunner(object):
             self.init_with_checkpoint()
 
     def load_dataset(self, dataset, training):
+        self.logger.info("Loading datasets: %s" % dataset.name)
         if dataset.name == "shapenet":
             return ShapeNet(config.SHAPENET_ROOT, dataset.subset_train if training else dataset.subset_eval,
                             dataset.mesh_pos, dataset.normalization)

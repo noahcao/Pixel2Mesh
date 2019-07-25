@@ -1,28 +1,14 @@
+import json
 import os
 import pickle
 
 import numpy as np
 import torch
+from skimage import io, transform
 from torch.utils.data.dataloader import default_collate
 
+import config
 from datasets.base_dataset import BaseDataset
-
-
-labels_map = {
-    "02691156": 0,
-    "02828884": 1,
-    "02933112": 2,
-    "02958343": 3,
-    "03001627": 4,
-    "03211117": 5,
-    "03636649": 6,
-    "03691459": 7,
-    "04090263": 8,
-    "04256520": 9,
-    "04379243": 10,
-    "04401088": 11,
-    "04530566": 12
-}
 
 
 class ShapeNet(BaseDataset):
@@ -33,18 +19,35 @@ class ShapeNet(BaseDataset):
     def __init__(self, file_root, file_list_name, mesh_pos, normalization):
         super().__init__()
         self.file_root = file_root
+        with open(os.path.join(self.file_root, "meta", "shapenet.json"), "r") as fp:
+            self.labels_map = sorted(list(json.load(fp).keys()))
+        self.labels_map = {k: i for i, k in enumerate(self.labels_map)}
         # Read file list
         with open(os.path.join(self.file_root, "meta", file_list_name + ".txt"), "r") as fp:
             self.file_names = fp.read().split("\n")[:-1]
+        self.tensorflow = "_tf" in file_list_name # tensorflow version of data
         self.normalization = normalization
         self.mesh_pos = mesh_pos
 
     def __getitem__(self, index):
-        label, filename = self.file_names[index].split("_", maxsplit=1)
-        with open(os.path.join(self.file_root, "data", label, filename), "rb") as f:
-            data = pickle.load(f, encoding="latin1")
+        if self.tensorflow:
+            filename = self.file_names[index][17:]
+            label = filename.split("/", maxsplit=1)[0]
+            pkl_path = os.path.join(self.file_root, "data_tf", filename)
+            img_path = pkl_path[:-4] + ".png"
+            with open(pkl_path) as f:
+                data = pickle.load(open(pkl_path, 'rb'), encoding="latin1")
+            pts, normals = data[:, :3], data[:, 3:]
+            img = io.imread(img_path)
+            img[np.where(img[:, :, 3] == 0)] = 255
+            img = transform.resize(img, (config.IMG_SIZE, config.IMG_SIZE))
+            img = img[:, :, :3].astype(np.float32)
+        else:
+            label, filename = self.file_names[index].split("_", maxsplit=1)
+            with open(os.path.join(self.file_root, "data", label, filename), "rb") as f:
+                data = pickle.load(f, encoding="latin1")
+            img, pts, normals = data[0].astype(np.float32) / 255.0, data[1][:, :3], data[1][:, 3:]
 
-        img, pts, normals = data[0].astype(np.float32) / 255.0, data[1][:, :3], data[1][:, 3:]
         pts -= np.array(self.mesh_pos)
         assert pts.shape[0] == normals.shape[0]
         length = pts.shape[0]
@@ -57,7 +60,7 @@ class ShapeNet(BaseDataset):
             "images_orig": img,
             "points": pts,
             "normals": normals,
-            "labels": labels_map[label],
+            "labels": self.labels_map[label],
             "filename": filename,
             "length": length
         }

@@ -1,6 +1,6 @@
 dataset:
-  subset_train: train_small
-  subset_eval: test_small
+  subset_train: train_tf
+  subset_eval: test_tf
   mesh_pos: [0., 0., 0.]
   camera_f: [250., 250.]
   camera_c: [112., 112.]
@@ -34,3 +34,4 @@ optim:
     - 20
   lr_factor: 0.5
 num_gpus: 4
+num_workers: 0
