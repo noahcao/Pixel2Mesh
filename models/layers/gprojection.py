@@ -37,15 +37,14 @@ class GProjection(nn.Module):
         return np.array([img.size(-1), img.size(-2)])
 
     def project_tensorflow(self, x, y, img_size, img_feat):
-        # it's tedious and contains bugs...
-        x1, x2 = torch.floor(x).long(), torch.ceil(x).long()
-        y1, y2 = torch.floor(y).long(), torch.ceil(y).long()
+        x = torch.clamp(x, min=0, max=img_size[1] - 1)
+        y = torch.clamp(y, min=0, max=img_size[0] - 1)
 
-        # notice that this can be not correct
+        # it's tedious and contains bugs...
         # when x1 = x2, the area is 0, therefore it won't be processed
         # keep it here to align with tensorflow version
-        x2 = torch.clamp(x2, max=img_size[0] - 1)
-        y2 = torch.clamp(y2, max=img_size[1] - 1)
+        x1, x2 = torch.floor(x).long(), torch.ceil(x).long()
+        y1, y2 = torch.floor(y).long(), torch.ceil(y).long()
 
         Q11 = img_feat[:, x1, y1].clone()
         Q12 = img_feat[:, x1, y2].clone()
