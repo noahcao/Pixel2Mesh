@@ -27,5 +27,5 @@ test:
   summary_steps: 5
   shuffle: true
 optim:
-  lr: 1.0e-5
+  lr: 1.0e-6
 num_workers: 16

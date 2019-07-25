@@ -61,12 +61,22 @@ def get_shapenet_collate(num_points):
                 if t["length"] != batch[0]["length"]:
                     all_equal = False
                     break
+            points_orig, normals_orig = [], []
             if not all_equal:
                 for t in batch:
                     pts, normal = t["points"], t["normals"]
                     length = pts.shape[0]
                     choices = np.resize(np.random.permutation(length), num_points)
                     t["points"], t["normals"] = pts[choices], normal[choices]
-        return default_collate(batch)
+                    points_orig.append(pts)
+                    normals_orig.append(normal)
+                ret = default_collate(batch)
+                ret["points_orig"] = points_orig
+                ret["normals_orig"] = normals_orig
+                return ret
+        ret = default_collate(batch)
+        ret["points_orig"] = ret["points"]
+        ret["normals_orig"] = ret["normals"]
+        return ret
 
     return shapenet_collate

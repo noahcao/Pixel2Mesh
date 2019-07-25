@@ -58,18 +58,18 @@ class Evaluator(CheckpointRunner):
         prec = np.sum(dis_to_pred < thresh) / pred_length
         return 2 * prec * recall / (prec + recall + 1e-8)
 
-    def evaluate_chamfer_and_f1(self, pred_vertices, gt_points, gt_length):
+    def evaluate_chamfer_and_f1(self, pred_vertices, gt_points):
         # calculate accurate chamfer distance; ground truth points with different lengths;
         # therefore cannot be batched
-        batch_size = gt_points.size(0)
+        batch_size = pred_vertices.size(0)
         pred_length = pred_vertices.size(1)
         for i in range(batch_size):
-            gt_length_i = min(gt_length[i].cpu().item(), self.options.dataset.shapenet.num_points)
-            d1, d2, i1, i2 = self.chamfer(pred_vertices[i].unsqueeze(0), gt_points[i, :gt_length_i].unsqueeze(0))
+            gt_length = gt_points[i].size(0)
+            d1, d2, i1, i2 = self.chamfer(pred_vertices[i].unsqueeze(0), gt_points[i].unsqueeze(0))
             d1, d2 = d1.cpu().numpy(), d2.cpu().numpy()  # convert to millimeter
             self.chamfer_distance.update(np.mean(d1) + np.mean(d2))
-            self.f1_tau.update(self.evaluate_f1(d1, d2, pred_length, gt_length_i, 1E-4))
-            self.f1_2tau.update(self.evaluate_f1(d1, d2, pred_length, gt_length_i, 2E-4))
+            self.f1_tau.update(self.evaluate_f1(d1, d2, pred_length, gt_length, 1E-4))
+            self.f1_2tau.update(self.evaluate_f1(d1, d2, pred_length, gt_length, 2E-4))
 
     def evaluate_accuracy(self, output, target):
         """Computes the accuracy over the k top predictions for the specified values of k"""
@@ -101,9 +101,8 @@ class Evaluator(CheckpointRunner):
 
             if self.options.model.name == "pixel2mesh":
                 pred_vertices = out["pred_coord"][-1]
-                gt_points = input_batch['points']
-                gt_length = input_batch['length']
-                self.evaluate_chamfer_and_f1(pred_vertices, gt_points, gt_length)
+                gt_points = input_batch["points_orig"]
+                self.evaluate_chamfer_and_f1(pred_vertices, gt_points)
             elif self.options.model.name == "classifier":
                 self.evaluate_accuracy(out, input_batch["labels"])
 
