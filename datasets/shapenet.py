@@ -68,8 +68,8 @@ def get_shapenet_collate(num_points):
                     length = pts.shape[0]
                     choices = np.resize(np.random.permutation(length), num_points)
                     t["points"], t["normals"] = pts[choices], normal[choices]
-                    points_orig.append(pts)
-                    normals_orig.append(normal)
+                    points_orig.append(torch.from_numpy(pts))
+                    normals_orig.append(torch.from_numpy(normal))
                 ret = default_collate(batch)
                 ret["points_orig"] = points_orig
                 ret["normals_orig"] = normals_orig

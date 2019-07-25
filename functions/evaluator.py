@@ -64,7 +64,7 @@ class Evaluator(CheckpointRunner):
         batch_size = pred_vertices.size(0)
         pred_length = pred_vertices.size(1)
         for i in range(batch_size):
-            gt_length = gt_points[i].shape[0]
+            gt_length = gt_points[i].size(0)
             d1, d2, i1, i2 = self.chamfer(pred_vertices[i].unsqueeze(0), gt_points[i].unsqueeze(0))
             d1, d2 = d1.cpu().numpy(), d2.cpu().numpy()  # convert to millimeter
             self.chamfer_distance.update(np.mean(d1) + np.mean(d2))
