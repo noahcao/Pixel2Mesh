@@ -31,8 +31,7 @@ options.dataset.camera_f = [248., 248.]
 options.dataset.camera_c = [111.5, 111.5]
 options.dataset.mesh_pos = [0., 0., -0.8]
 options.dataset.normalization = True
-# for classifier
-options.dataset.num_classes = 1000
+options.dataset.num_classes = 13
 
 options.dataset.shapenet = edict()
 options.dataset.shapenet.num_points = 3000

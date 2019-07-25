@@ -31,6 +31,7 @@ class Evaluator(CheckpointRunner):
             self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
         else:
             self.renderer = None
+        self.num_classes = self.options.dataset.num_classes
 
         if shared_model is not None:
             self.model = shared_model
@@ -58,18 +59,19 @@ class Evaluator(CheckpointRunner):
         prec = np.sum(dis_to_pred < thresh) / pred_length
         return 2 * prec * recall / (prec + recall + 1e-8)
 
-    def evaluate_chamfer_and_f1(self, pred_vertices, gt_points):
+    def evaluate_chamfer_and_f1(self, pred_vertices, gt_points, labels):
         # calculate accurate chamfer distance; ground truth points with different lengths;
         # therefore cannot be batched
         batch_size = pred_vertices.size(0)
         pred_length = pred_vertices.size(1)
         for i in range(batch_size):
             gt_length = gt_points[i].size(0)
+            label = labels[i].cpu().item()
             d1, d2, i1, i2 = self.chamfer(pred_vertices[i].unsqueeze(0), gt_points[i].unsqueeze(0))
             d1, d2 = d1.cpu().numpy(), d2.cpu().numpy()  # convert to millimeter
-            self.chamfer_distance.update(np.mean(d1) + np.mean(d2))
-            self.f1_tau.update(self.evaluate_f1(d1, d2, pred_length, gt_length, 1E-4))
-            self.f1_2tau.update(self.evaluate_f1(d1, d2, pred_length, gt_length, 2E-4))
+            self.chamfer_distance[label].update(np.mean(d1) + np.mean(d2))
+            self.f1_tau[label].update(self.evaluate_f1(d1, d2, pred_length, gt_length, 1E-4))
+            self.f1_2tau[label].update(self.evaluate_f1(d1, d2, pred_length, gt_length, 2E-4))
 
     def evaluate_accuracy(self, output, target):
         """Computes the accuracy over the k top predictions for the specified values of k"""
@@ -104,7 +106,7 @@ class Evaluator(CheckpointRunner):
                 gt_points = input_batch["points_orig"]
                 if isinstance(gt_points, list):
                     gt_points = [pts.cuda() for pts in gt_points]
-                self.evaluate_chamfer_and_f1(pred_vertices, gt_points)
+                self.evaluate_chamfer_and_f1(pred_vertices, gt_points, input_batch["labels"])
             elif self.options.model.name == "classifier":
                 self.evaluate_accuracy(out, input_batch["labels"])
 
@@ -125,9 +127,9 @@ class Evaluator(CheckpointRunner):
                                       collate_fn=self.dataset_collate_fn)
 
         if self.options.model.name == "pixel2mesh":
-            self.chamfer_distance = AverageMeter()
-            self.f1_tau = AverageMeter()
-            self.f1_2tau = AverageMeter()
+            self.chamfer_distance = [AverageMeter() for _ in range(self.num_classes)]
+            self.f1_tau = [AverageMeter() for _ in range(self.num_classes)]
+            self.f1_2tau = [AverageMeter() for _ in range(self.num_classes)]
         elif self.options.model.name == "classifier":
             self.acc_1 = AverageMeter()
             self.acc_5 = AverageMeter()
@@ -155,12 +157,15 @@ class Evaluator(CheckpointRunner):
             self.logger.info("Test [%06d] %s: %.6f" % (self.total_step_count, key, scalar))
             self.summary_writer.add_scalar("eval_" + key, scalar, self.total_step_count + 1)
 
+    def average_of_average_meters(self, average_meters):
+        return sum([meter.avg for meter in average_meters]) / len(average_meters)
+
     def get_result_summary(self):
         if self.options.model.name == "pixel2mesh":
             return {
-                "cd": self.chamfer_distance,
-                "f1_tau": self.f1_tau,
-                "f1_2tau": self.f1_2tau,
+                "cd": self.average_of_average_meters(self.chamfer_distance),
+                "f1_tau": self.average_of_average_meters(self.f1_tau),
+                "f1_2tau": self.average_of_average_meters(self.f1_2tau),
             }
         elif self.options.model.name == "classifier":
             return {
@@ -176,6 +181,8 @@ class Evaluator(CheckpointRunner):
                          + ", ".join([key + " " + (str(val) if isinstance(val, AverageMeter) else "%.6f" % val)
                                       for key, val in self.get_result_summary().items()]))
 
+        self.summary_writer.add_histogram("eval_labels", input_batch["labels"].cpu().numpy(),
+                                          self.total_step_count)
         if self.renderer is not None:
             # Do visualization for the first 2 images of the batch
             render_mesh = self.renderer.p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)

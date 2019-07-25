@@ -1,5 +1,6 @@
 dataset:
   name: imagenet
+  num_classes: 1000
 train:
   num_epochs: 90
   batch_size: 32

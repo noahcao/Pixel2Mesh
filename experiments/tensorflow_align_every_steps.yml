@@ -1,4 +1,6 @@
 dataset:
+  subset_train: train_all
+  subset_eval: test_all
   mesh_pos: [0., 0., 0.]
   camera_f: [250., 250.]
   camera_c: [112., 112.]

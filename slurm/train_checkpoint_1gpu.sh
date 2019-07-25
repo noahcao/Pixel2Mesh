@@ -2,7 +2,7 @@
 
 set -x
 
-if [[ $# -lt 3 ]] ; then
+if [[ $# -lt 4 ]] ; then
     echo 'too few arguments supplied'
     exit 1
 fi
