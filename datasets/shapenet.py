@@ -40,7 +40,8 @@ class ShapeNet(BaseDataset):
             pts, normals = data[:, :3], data[:, 3:]
             img = io.imread(img_path)
             img[np.where(img[:, :, 3] == 0)] = 255
-            img = transform.resize(img, (config.IMG_SIZE, config.IMG_SIZE))
+            img = transform.resize(img, (config.IMG_SIZE, config.IMG_SIZE),
+                                   mode='constant', anti_aliasing=False)  # to match behavior of old versions
             img = img[:, :, :3].astype(np.float32)
         else:
             label, filename = self.file_names[index].split("_", maxsplit=1)
