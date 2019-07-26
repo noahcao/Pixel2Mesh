@@ -21,16 +21,16 @@ train:
 loss:
   weights:
     chamfer_opposite: 0.55
-    laplace: 0.5
-    edge: 0.1
-    move: 0.033
-#    constant: 3000
+    laplace: 0
+    edge: 0
+    move: 0
+    constant: 3000
 test:
   batch_size: 4
   summary_steps: 5
 optim:
-  lr: 1.0e-5
-  wd: 1.0e-5
+  lr: 1.0e-9
+  wd: 0
   lr_step:
     - 10
     - 20

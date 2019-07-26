@@ -2,15 +2,18 @@ dataset:
   name: imagenet
   num_classes: 1000
 train:
-  num_epochs: 90
+  num_epochs: 80
   batch_size: 32
 model:
   name: classifier
   backbone: vgg16
 optim:
-  lr: 1.0e-3
+  name: sgd
+  lr: 1.0e-2
+  wd: 5.0e-4
   lr_step:
-    - 30
+    - 20
+    - 40
     - 60
 test:
   batch_size: 32

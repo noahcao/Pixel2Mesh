@@ -78,7 +78,9 @@ options.test.batch_size = 4
 options.test.shuffle = False
 
 options.optim = edict()
+options.optim.name = "adam"
 options.optim.adam_beta1 = 0.9
+options.optim.sgd_momentum = 0.9
 options.optim.lr = 5.0E-5
 options.optim.wd = 1.0E-6
 options.optim.lr_step = [30, 45]

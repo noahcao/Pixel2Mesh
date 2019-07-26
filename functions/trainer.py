@@ -45,11 +45,22 @@ class Trainer(CheckpointRunner):
             self.model = torch.nn.DataParallel(self.model, device_ids=self.gpus).cuda()
 
         # Setup a joint optimizer for the 2 models
-        self.optimizer = torch.optim.Adam(
-            params=list(self.model.parameters()),
-            lr=self.options.optim.lr,
-            betas=(self.options.optim.adam_beta1, 0.999),
-            weight_decay=self.options.optim.wd)
+        if self.options.optim.name == "adam":
+            self.optimizer = torch.optim.Adam(
+                params=list(self.model.parameters()),
+                lr=self.options.optim.lr,
+                betas=(self.options.optim.adam_beta1, 0.999),
+                weight_decay=self.options.optim.wd
+            )
+        elif self.options.optim.name == "sgd":
+            self.optimizer = torch.optim.SGD(
+                params=list(self.model.parameters()),
+                lr=self.options.optim.lr,
+                momentum=self.options.optim.sgd_momentum,
+                weight_decay=self.options.optim.wd
+            )
+        else:
+            raise NotImplementedError("Your optimizer is not found")
         self.lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
             self.optimizer, self.options.optim.lr_step, self.options.optim.lr_factor
         )
