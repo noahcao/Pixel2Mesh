@@ -16,9 +16,9 @@
 #
 import os, sys
 import tensorflow as tf
-from pixel2mesh.models import GCN
-from pixel2mesh.fetcher import *
-from pixel2mesh.cd_dist import nn_distance
+from p2m.models import GCN
+from p2m.fetcher import *
+from p2m.chamfer import nn_distance
 sys.path.append('external')
 from tf_approxmatch import approx_match, match_cost
 
@@ -81,7 +81,7 @@ def f_score(label, predict, dist_label, dist_pred, threshold):
 		recall = 100.0 * num / num_label
 		num = len(np.where(dist_pred <= threshold[i])[0])
 		precision = 100.0 * num / num_predict
-
+                print(i, recall, precision)
 		f_scores.append((2*precision*recall)/(precision+recall+1e-8))
 	return np.array(f_scores)
 
@@ -90,6 +90,8 @@ data = DataFetcher(FLAGS.data_list)
 data.setDaemon(True) ####
 data.start()
 train_number = data.number
+# train_number = 50
+
 
 # Initialize session
 # xyz1:dataset_points * 3, xyz2:query_points * 3
@@ -130,8 +132,10 @@ for iters in range(train_number):
 	label = label[:, :3]
 	d1,i1,d2,i2,emd = sess.run([dist1,idx1,dist2,idx2, emd_dist], feed_dict={xyz1:label,xyz2:predict})
 	cd = np.mean(d1) + np.mean(d2)
+        print(cd)
 
-	class_id = model_id.split('_')[0]
+	# class_id = model_id.split('_')[0]
+        class_id = model_id
 	model_number[class_id] += 1.0
 
 	sum_f[class_id] += f_score(label,predict,d1,d2,[0.0001, 0.0002])

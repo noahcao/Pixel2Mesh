@@ -36,7 +36,6 @@ class DataFetcher(threading.Thread):
 				self.pkl_list.append(line)
 		self.index = 0
 		self.number = len(self.pkl_list)
-		np.random.shuffle(self.pkl_list)
 
 	def work(self, idx):
 		pkl_path = self.pkl_list[idx]
@@ -54,14 +53,12 @@ class DataFetcher(threading.Thread):
 		img = transform.resize(img, (224,224))
 		img = img[:,:,:3].astype('float32')
 
-		return img, label, pkl_path.split('/')[-1]
+		return img, label, pkl_path.split('/')[2]
 	
 	def run(self):
 		while self.index < 90000000 and not self.stopped:
 			self.queue.put(self.work(self.index % self.number))
 			self.index += 1
-			if self.index % self.number == 0:
-				np.random.shuffle(self.pkl_list)
 	
 	def fetch(self):
 		if self.stopped:
