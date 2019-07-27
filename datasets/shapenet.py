@@ -16,7 +16,7 @@ class ShapeNet(BaseDataset):
     Dataset wrapping images and target meshes for ShapeNet dataset.
     """
 
-    def __init__(self, file_root, file_list_name, mesh_pos, normalization):
+    def __init__(self, file_root, file_list_name, mesh_pos, normalization, shapenet_options):
         super().__init__()
         self.file_root = file_root
         with open(os.path.join(self.file_root, "meta", "shapenet.json"), "r") as fp:
@@ -28,6 +28,7 @@ class ShapeNet(BaseDataset):
         self.tensorflow = "_tf" in file_list_name # tensorflow version of data
         self.normalization = normalization
         self.mesh_pos = mesh_pos
+        self.resize_with_constant_border = shapenet_options.resize_with_constant_border
 
     def __getitem__(self, index):
         if self.tensorflow:
@@ -40,8 +41,11 @@ class ShapeNet(BaseDataset):
             pts, normals = data[:, :3], data[:, 3:]
             img = io.imread(img_path)
             img[np.where(img[:, :, 3] == 0)] = 255
-            img = transform.resize(img, (config.IMG_SIZE, config.IMG_SIZE),
-                                   mode='constant', anti_aliasing=False)  # to match behavior of old versions
+            if self.resize_with_constant_border:
+                img = transform.resize(img, (config.IMG_SIZE, config.IMG_SIZE),
+                                       mode='constant', anti_aliasing=False)  # to match behavior of old versions
+            else:
+                img = transform.resize(img, (config.IMG_SIZE, config.IMG_SIZE))
             img = img[:, :, :3].astype(np.float32)
         else:
             label, filename = self.file_names[index].split("_", maxsplit=1)

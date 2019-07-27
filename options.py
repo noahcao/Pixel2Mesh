@@ -35,6 +35,7 @@ options.dataset.num_classes = 13
 
 options.dataset.shapenet = edict()
 options.dataset.shapenet.num_points = 3000
+options.dataset.shapenet.resize_with_constant_border = False
 
 options.model = edict()
 options.model.name = "pixel2mesh"

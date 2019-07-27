@@ -6,7 +6,8 @@ dataset:
   camera_c: [112., 112.]
   normalization: false
   shapenet:
-    num_points: 4761
+    num_points: 9000
+    resize_with_constant_border: true
 model:
   hidden_dim: 256
   last_hidden_dim: 128
