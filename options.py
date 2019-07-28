@@ -77,6 +77,7 @@ options.test.dataset = []
 options.test.summary_steps = 50
 options.test.batch_size = 4
 options.test.shuffle = False
+options.test.weighted_mean = False
 
 options.optim = edict()
 options.optim.name = "adam"

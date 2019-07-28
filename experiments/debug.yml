@@ -28,6 +28,7 @@ loss:
 test:
   batch_size: 4
   summary_steps: 5
+  weighted_mean: true
 optim:
   lr: 1.0e-9
   wd: 0

@@ -29,6 +29,8 @@ class Evaluator(CheckpointRunner):
             self.chamfer = ChamferDist()
             # create ellipsoid
             self.ellipsoid = Ellipsoid(self.options.dataset.mesh_pos)
+            # use weighted mean evaluation metrics or not
+            self.weighted_mean = self.options.test.weighted_mean
         else:
             self.renderer = None
         self.num_classes = self.options.dataset.num_classes
@@ -158,7 +160,12 @@ class Evaluator(CheckpointRunner):
             self.summary_writer.add_scalar("eval_" + key, scalar, self.total_step_count + 1)
 
     def average_of_average_meters(self, average_meters):
-        return sum([meter.avg for meter in average_meters]) / len(average_meters)
+        if self.weighted_mean:
+            s = sum([meter.sum for meter in average_meters])
+            c = sum([meter.count for meter in average_meters])
+            return s / c if c > 0 else 0.
+        else:
+            return sum([meter.avg for meter in average_meters]) / len(average_meters)
 
     def get_result_summary(self):
         if self.options.model.name == "pixel2mesh":
