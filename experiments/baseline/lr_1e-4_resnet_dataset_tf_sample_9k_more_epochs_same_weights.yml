@@ -1,0 +1,8 @@
+based_on:
+  - lr_1e-4_resnet_dataset_tf_sample_9k_more_epochs.yml
+loss:
+  weights:
+    chamfer_opposite: 0.55
+    laplace: 0.5
+    edge: 0.1
+    move: 0.033
