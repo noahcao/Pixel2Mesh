@@ -1,0 +1,4 @@
+based_on:
+  - lr_1e-4_dataset_tf_same_weights_step_adjusted.yml
+optim:
+  lr: 1.0e-5
