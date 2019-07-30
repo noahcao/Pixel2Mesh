@@ -12,7 +12,7 @@ model:
   last_hidden_dim: 128
   backbone: vgg16
   z_threshold: 0
-  align_with_tensorflow: true
+#  align_with_tensorflow: true
 train:
   batch_size: 1
   summary_steps: 1

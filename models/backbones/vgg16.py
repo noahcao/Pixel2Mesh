@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import config
+
 
 class VGG16TensorflowAlign(nn.Module):
 
@@ -102,7 +104,11 @@ class VGG16P2M(nn.Module):
         self.conv5_3 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
         self.conv5_4 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
 
-        self._initialize_weights()
+        if "vgg16p2m" in config.PRETRAINED_WEIGHTS_PATH:
+            state_dict = torch.load(config.PRETRAINED_WEIGHTS_PATH["vgg16p2m"])
+            self.load_state_dict(state_dict)
+        else:
+            self._initialize_weights()
 
     def _initialize_weights(self):
         for m in self.modules():
