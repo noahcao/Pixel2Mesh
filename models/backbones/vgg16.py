@@ -75,7 +75,7 @@ class VGG16TensorflowAlign(nn.Module):
 
 class VGG16P2M(nn.Module):
 
-    def __init__(self, n_classes_input=3):
+    def __init__(self, n_classes_input=3, pretrained=False):
         super(VGG16P2M, self).__init__()
 
         self.features_dim = 960
@@ -104,7 +104,7 @@ class VGG16P2M(nn.Module):
         self.conv5_3 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
         self.conv5_4 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
 
-        if "vgg16p2m" in config.PRETRAINED_WEIGHTS_PATH:
+        if "vgg16p2m" in config.PRETRAINED_WEIGHTS_PATH and pretrained:
             state_dict = torch.load(config.PRETRAINED_WEIGHTS_PATH["vgg16p2m"])
             self.load_state_dict(state_dict)
         else:
