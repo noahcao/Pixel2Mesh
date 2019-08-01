@@ -12,6 +12,8 @@ def recursive_detach(t):
         return [recursive_detach(x) for x in t]
     elif isinstance(t, dict):
         return {k: recursive_detach(v) for k, v in t.items()}
+    else:
+        return t
 
 
 def batch_mm(matrix, batch):

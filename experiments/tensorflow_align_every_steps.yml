@@ -1,0 +1,34 @@
+dataset:
+  subset_train: train_tf
+  subset_eval: test_tf
+  mesh_pos: [0., 0., 0.]
+  camera_f: [250., 250.]
+  camera_c: [112., 112.]
+  normalization: false
+  shapenet:
+    num_points: 9000
+    resize_with_constant_border: true
+model:
+  hidden_dim: 256
+  last_hidden_dim: 128
+  backbone: vgg16
+  z_threshold: 0
+  align_with_tensorflow: true
+train:
+  batch_size: 1
+  summary_steps: 1
+  num_epochs: 2
+  shuffle: true
+loss:
+  weights:
+    chamfer_opposite: 0.55
+    laplace: 0.5
+    edge: 0.1
+    move: 0.033
+test:
+  batch_size: 24
+  summary_steps: 5
+  shuffle: true
+optim:
+  lr: 1.0e-6
+num_workers: 16

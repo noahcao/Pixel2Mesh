@@ -1,0 +1,5 @@
+based_on:
+  - tensorflow_align_every_steps.yml
+num_gpus: 0
+test:
+  batch_size: 1

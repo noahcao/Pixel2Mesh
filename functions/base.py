@@ -5,9 +5,11 @@ from logging import Logger
 import torch
 import torch.nn
 from tensorboardX import SummaryWriter
+from torch.utils.data.dataloader import default_collate
 
 import config
-from datasets.shapenet import ShapeNet
+from datasets.imagenet import ImageNet
+from datasets.shapenet import ShapeNet, get_shapenet_collate, ShapeNetImageFolder
 from functions.saver import CheckpointSaver
 
 
@@ -18,8 +20,8 @@ class CheckpointRunner(object):
         self.logger = logger
 
         # GPUs
-        if not torch.cuda.is_available():
-            raise ValueError("CPU training has not been supported yet")
+        if not torch.cuda.is_available() and self.options.num_gpus > 0:
+            raise ValueError("CUDA not found yet number of GPUs is set to be greater than 0")
         self.gpus = list(range(self.options.num_gpus))
 
         # initialize summary writer
@@ -29,6 +31,7 @@ class CheckpointRunner(object):
         if dataset is None:
             dataset = options.dataset  # useful during training
         self.dataset = self.load_dataset(dataset, training)
+        self.dataset_collate_fn = self.load_collate_fn(dataset, training)
 
         # by default, epoch_count = step_count = 0
         self.epoch_count = self.step_count = 0
@@ -37,6 +40,7 @@ class CheckpointRunner(object):
         # override this function to define your model, optimizers etc.
         # in case you want to use a model that is defined in a trainer or other place in the code,
         # shared_model should help. in this case, checkpoint is not used
+        self.logger.info("Running model initialization...")
         self.init_fn(shared_model=shared_model)
 
         if shared_model is None:
@@ -46,10 +50,21 @@ class CheckpointRunner(object):
             self.init_with_checkpoint()
 
     def load_dataset(self, dataset, training):
+        self.logger.info("Loading datasets: %s" % dataset.name)
         if dataset.name == "shapenet":
             return ShapeNet(config.SHAPENET_ROOT, dataset.subset_train if training else dataset.subset_eval,
-                            self.options.dataset.shapenet.num_points, dataset.mesh_pos, dataset.normalization)
+                            dataset.mesh_pos, dataset.normalization, dataset.shapenet)
+        elif dataset.name == "shapenet_demo":
+            return ShapeNetImageFolder(dataset.predict.folder, dataset.normalization, dataset.shapenet)
+        elif dataset.name == "imagenet":
+            return ImageNet(config.IMAGENET_ROOT, "train" if training else "val")
         raise NotImplementedError("Unsupported dataset")
+
+    def load_collate_fn(self, dataset, training):
+        if dataset.name == "shapenet":
+            return get_shapenet_collate(dataset.shapenet.num_points)
+        else:
+            return default_collate
 
     def init_fn(self, shared_model=None, **kwargs):
         raise NotImplementedError('You need to provide an _init_fn method')

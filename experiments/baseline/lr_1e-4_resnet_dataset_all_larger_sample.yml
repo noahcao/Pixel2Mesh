@@ -1,0 +1,20 @@
+based_on:
+  - lr_1e-4.yml
+model:
+  backbone: resnet50
+train:
+  batch_size: 8
+  num_epochs: 70
+test:
+  batch_size: 8
+dataset:
+  subset_train: train_all
+  subset_eval: test_all
+  shapenet:
+    num_points: 5000
+optim:
+  lr_factor: 0.3
+  lr_step:
+    - 25
+    - 45
+    - 60

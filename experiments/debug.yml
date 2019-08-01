@@ -1,21 +1,26 @@
 dataset:
-  subset_train: train_small
-  subset_eval: test_small
-  camera_f: [250., 250.]
-train:
-  num_epochs: 8
-  batch_size: 2
-  test_epochs: 1
-  summary_steps: 1
-  shuffle: true
+  subset_train: train_tf
+  subset_eval: test_tf
+  normalization: true
+  shapenet:
+    num_points: 4761
 model:
   hidden_dim: 256
   last_hidden_dim: 128
   backbone: vgg16
   z_threshold: 0
-optim:
-  lr: 1.0E-4
-test:
+#  align_with_tensorflow: true
+train:
   batch_size: 2
+  summary_steps: 1
+  num_epochs: 2
+test:
+  batch_size: 4
   summary_steps: 5
-num_workers: 1
+  weighted_mean: true
+optim:
+  lr: 1.0e-4
+  lr_step:
+    - 10
+    - 20
+  lr_factor: 0.5

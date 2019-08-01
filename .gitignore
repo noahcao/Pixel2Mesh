@@ -116,7 +116,8 @@ logs/
 # data
 datasets/data
 datasets/extras
-basicModel_neutral_lbs_10_207_0_v1.0.0.pkl
+datasets/examples/*.obj
+datasets/examples/*.gif
 summary
 checkpoints
 
