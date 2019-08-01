@@ -23,9 +23,11 @@ class Predictor(CheckpointRunner):
     def init_fn(self, shared_model=None, **kwargs):
         self.gpu_inference = self.options.num_gpus > 0
         if self.gpu_inference == 0:
-            self.logger.warning("Render part would be disabled since you are using CPU. "
-                                "Neural renderer requires GPU to run. Please use other softwares "
-                                "or packages to view .obj file generated.")
+            raise NotImplementedError("CPU inference is currently buggy. This takes some extra efforts and "
+                                      "might be fixed in the future.")
+            # self.logger.warning("Render part would be disabled since you are using CPU. "
+            #                     "Neural renderer requires GPU to run. Please use other softwares "
+            #                     "or packages to view .obj file generated.")
 
         if self.options.model.name == "pixel2mesh":
             # create ellipsoid
@@ -98,7 +100,7 @@ class Predictor(CheckpointRunner):
                     ])
                     writer = imageio.get_writer(basename + ".gif", mode='I')
                     color = random.choice(color_repo)
-                    for _ in tqdm(range(360 // rot_degree), desc="Sample %d" % i):
+                    for _ in tqdm(range(360 // rot_degree), desc="Rendering sample %d" % i):
                         image = inputs["images_orig"][i].cpu().numpy()
                         ret = image
                         for k, vert in enumerate(verts):
