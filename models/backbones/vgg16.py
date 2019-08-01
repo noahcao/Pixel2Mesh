@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import config
+
 
 class VGG16TensorflowAlign(nn.Module):
 
@@ -73,7 +75,7 @@ class VGG16TensorflowAlign(nn.Module):
 
 class VGG16P2M(nn.Module):
 
-    def __init__(self, n_classes_input=3):
+    def __init__(self, n_classes_input=3, pretrained=False):
         super(VGG16P2M, self).__init__()
 
         self.features_dim = 960
@@ -101,6 +103,25 @@ class VGG16P2M(nn.Module):
         self.conv5_2 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
         self.conv5_3 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
         self.conv5_4 = nn.Conv2d(512, 512, 3, stride=1, padding=1)
+
+        if "vgg16p2m" in config.PRETRAINED_WEIGHTS_PATH and pretrained:
+            state_dict = torch.load(config.PRETRAINED_WEIGHTS_PATH["vgg16p2m"])
+            self.load_state_dict(state_dict)
+        else:
+            self._initialize_weights()
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.constant_(m.bias, 0)
 
     def forward(self, img):
         img = F.relu(self.conv0_1(img))

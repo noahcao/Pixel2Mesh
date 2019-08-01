@@ -1,0 +1,14 @@
+based_on:
+  - lr_1e-4_resnet_dataset_tf_sample_9k.yml
+model:
+  backbone: vgg16
+train:
+  batch_size: 24
+test:
+  batch_size: 24
+loss:
+  weights:
+    chamfer_opposite: 0.55
+    laplace: 0.5
+    edge: 0.1
+    move: 0.033

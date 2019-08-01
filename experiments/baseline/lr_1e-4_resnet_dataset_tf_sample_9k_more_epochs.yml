@@ -1,0 +1,9 @@
+based_on:
+  - lr_1e-4_resnet_dataset_tf_sample_9k.yml
+train:
+  num_epochs: 110
+optim:
+  lr_step:
+    - 40
+    - 70
+    - 90

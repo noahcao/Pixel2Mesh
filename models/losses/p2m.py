@@ -89,7 +89,7 @@ class P2MLoss(nn.Module):
         gt_coord, gt_normal, gt_images = targets["points"], targets["normals"], targets["images"]
         pred_coord, pred_coord_before_deform = outputs["pred_coord"], outputs["pred_coord_before_deform"]
         image_loss = 0.
-        if outputs["reconst"] is not None:
+        if outputs["reconst"] is not None and self.options.weights.reconst != 0:
             image_loss = self.image_loss(gt_images, outputs["reconst"])
 
         for i in range(3):

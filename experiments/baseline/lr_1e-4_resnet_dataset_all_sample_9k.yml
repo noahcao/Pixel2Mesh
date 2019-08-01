@@ -1,0 +1,5 @@
+based_on:
+  - lr_1e-4_resnet_dataset_all_larger_sample.yml
+dataset:
+  shapenet:
+    num_points: 9000

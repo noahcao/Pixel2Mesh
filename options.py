@@ -31,9 +31,14 @@ options.dataset.camera_f = [248., 248.]
 options.dataset.camera_c = [111.5, 111.5]
 options.dataset.mesh_pos = [0., 0., -0.8]
 options.dataset.normalization = True
+options.dataset.num_classes = 13
 
 options.dataset.shapenet = edict()
 options.dataset.shapenet.num_points = 3000
+options.dataset.shapenet.resize_with_constant_border = False
+
+options.dataset.predict = edict()
+options.dataset.predict.folder = "/tmp"
 
 options.model = edict()
 options.model.name = "pixel2mesh"
@@ -75,9 +80,12 @@ options.test.dataset = []
 options.test.summary_steps = 50
 options.test.batch_size = 4
 options.test.shuffle = False
+options.test.weighted_mean = False
 
 options.optim = edict()
+options.optim.name = "adam"
 options.optim.adam_beta1 = 0.9
+options.optim.sgd_momentum = 0.9
 options.optim.lr = 5.0E-5
 options.optim.wd = 1.0E-6
 options.optim.lr_step = [30, 45]
@@ -133,14 +141,16 @@ def slugify(filename):
 
 
 def reset_options(options, args, phase='train'):
-    if args.batch_size:
+    if hasattr(args, "batch_size") and args.batch_size:
         options.train.batch_size = options.test.batch_size = args.batch_size
-    if args.version:
+    if hasattr(args, "version") and args.version:
         options.version = args.version
     if hasattr(args, "num_epochs") and args.num_epochs:
         options.train.num_epochs = args.num_epochs
     if hasattr(args, "checkpoint") and args.checkpoint:
         options.checkpoint = args.checkpoint
+    if hasattr(args, "folder") and args.folder:
+        options.dataset.predict.folder = args.folder
 
     options.name = args.name
 

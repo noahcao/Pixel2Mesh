@@ -1,0 +1,4 @@
+based_on:
+  - vgg16.yml
+optim:
+  lr: 1.0e-4

@@ -1,0 +1,9 @@
+based_on:
+  - lr_1e-4_dataset_tf_same_weights_step_adjusted.yml
+train:
+  num_epochs: 110
+optim:
+  lr_step:
+    - 40
+    - 80
+    - 100
