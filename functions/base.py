@@ -9,7 +9,7 @@ from torch.utils.data.dataloader import default_collate
 
 import config
 from datasets.imagenet import ImageNet
-from datasets.shapenet import ShapeNet, get_shapenet_collate
+from datasets.shapenet import ShapeNet, get_shapenet_collate, ShapeNetImageFolder
 from functions.saver import CheckpointSaver
 
 
@@ -20,8 +20,8 @@ class CheckpointRunner(object):
         self.logger = logger
 
         # GPUs
-        if not torch.cuda.is_available():
-            raise ValueError("CPU training has not been supported yet")
+        if not torch.cuda.is_available() and self.options.num_gpus > 0:
+            raise ValueError("CUDA not found yet number of GPUs is set to be greater than 0")
         self.gpus = list(range(self.options.num_gpus))
 
         # initialize summary writer
@@ -54,6 +54,8 @@ class CheckpointRunner(object):
         if dataset.name == "shapenet":
             return ShapeNet(config.SHAPENET_ROOT, dataset.subset_train if training else dataset.subset_eval,
                             dataset.mesh_pos, dataset.normalization, dataset.shapenet)
+        elif dataset.name == "shapenet_demo":
+            return ShapeNetImageFolder(dataset.predict.folder, dataset.normalization, dataset.shapenet)
         elif dataset.name == "imagenet":
             return ImageNet(config.IMAGENET_ROOT, "train" if training else "val")
         raise NotImplementedError("Unsupported dataset")

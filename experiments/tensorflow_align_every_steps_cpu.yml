@@ -1,0 +1,3 @@
+based_on:
+  - tensorflow_align_every_steps.yml
+num_gpus: 0

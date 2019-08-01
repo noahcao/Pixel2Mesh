@@ -37,6 +37,9 @@ options.dataset.shapenet = edict()
 options.dataset.shapenet.num_points = 3000
 options.dataset.shapenet.resize_with_constant_border = False
 
+options.dataset.predict = edict()
+options.dataset.predict.folder = "/tmp"
+
 options.model = edict()
 options.model.name = "pixel2mesh"
 options.model.hidden_dim = 192
@@ -138,14 +141,16 @@ def slugify(filename):
 
 
 def reset_options(options, args, phase='train'):
-    if args.batch_size:
+    if hasattr(args, "batch_size") and args.batch_size:
         options.train.batch_size = options.test.batch_size = args.batch_size
-    if args.version:
+    if hasattr(args, "version") and args.version:
         options.version = args.version
     if hasattr(args, "num_epochs") and args.num_epochs:
         options.train.num_epochs = args.num_epochs
     if hasattr(args, "checkpoint") and args.checkpoint:
         options.checkpoint = args.checkpoint
+    if hasattr(args, "folder") and args.folder:
+        options.dataset.predict.folder = args.folder
 
     options.name = args.name
 

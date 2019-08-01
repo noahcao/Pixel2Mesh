@@ -3,8 +3,6 @@ import neural_renderer as nr
 import numpy as np
 import torch
 
-import config
-
 
 def _process_render_result(img, height, width):
     if isinstance(img, torch.Tensor):
@@ -28,7 +26,11 @@ class MeshRenderer(object):
 
     def __init__(self, camera_f, camera_c, mesh_pos):
         self.colors = {'pink': np.array([.9, .7, .7]),
-                       'light_blue': np.array([0.65098039, 0.74117647, 0.85882353])
+                       'light_blue': np.array([0.65098039, 0.74117647, 0.85882353]),
+                       'light_green': np.array([165., 216., 168.]) / 255,
+                       'purple': np.array([216., 193., 165.]) / 255,
+                       'orange': np.array([216., 165., 213.]) / 255,
+                       'light_yellow': np.array([213., 216., 165.]) / 255,
                        }
         self.camera_f, self.camera_c, self.mesh_pos = camera_f, camera_c, mesh_pos
         self.renderer = nr.Renderer(camera_mode='projection',
@@ -48,7 +50,9 @@ class MeshRenderer(object):
         vertices = torch.tensor(vertices, dtype=torch.float32)
         faces = torch.tensor(faces, dtype=torch.int32)
 
-        color = self.colors[color or 'light_blue']
+        if color is None:
+            color = 'light_blue'
+        color = self.colors[color]
         texture_size = 2
         textures = torch.tensor(color, dtype=torch.float32) \
             .repeat(faces.size(0), texture_size, texture_size, texture_size, 1)
@@ -74,7 +78,9 @@ class MeshRenderer(object):
 
     def _render_pointcloud(self, vertices: np.ndarray, width, height,
                            camera_k, camera_dist_coeffs, rvec, tvec, color=None):
-        color = self.colors[color or 'pink']
+        if color is None:
+            color = 'pink'
+        color = self.colors[color]
 
         # return pointcloud
         vertices_2d = cv2.projectPoints(np.expand_dims(vertices, -1),
@@ -91,7 +97,7 @@ class MeshRenderer(object):
         rgb = _mix_render_result_with_image(rgb, alpha[0], whiteboard)
         return rgb, alpha
 
-    def visualize_reconstruction(self, gt_coord, coord, faces, image):
+    def visualize_reconstruction(self, gt_coord, coord, faces, image, mesh_only=False, **kwargs):
         camera_k = np.array([[self.camera_f[0], 0, self.camera_c[0]],
                              [0, self.camera_f[1], self.camera_c[1]],
                              [0, 0, 1]])
@@ -99,12 +105,15 @@ class MeshRenderer(object):
         rvec = np.array([np.pi, 0., 0.], dtype=np.float32)
         tvec = np.zeros(3, dtype=np.float32)
         dist_coeffs = np.zeros(5, dtype=np.float32)
-        gt_pc, _ = self._render_pointcloud(gt_coord, image.shape[2], image.shape[1],
-                                           camera_k, dist_coeffs, rvec, tvec)
-        pred_pc, _ = self._render_pointcloud(coord, image.shape[2], image.shape[1],
-                                             camera_k, dist_coeffs, rvec, tvec)
         mesh, _ = self._render_mesh(coord, faces, image.shape[2], image.shape[1],
-                                    camera_k, dist_coeffs, rvec, tvec)
+                                    camera_k, dist_coeffs, rvec, tvec, **kwargs)
+        if mesh_only:
+            return mesh
+
+        gt_pc, _ = self._render_pointcloud(gt_coord, image.shape[2], image.shape[1],
+                                           camera_k, dist_coeffs, rvec, tvec, **kwargs)
+        pred_pc, _ = self._render_pointcloud(coord, image.shape[2], image.shape[1],
+                                             camera_k, dist_coeffs, rvec, tvec, **kwargs)
         return np.concatenate((image, gt_pc, pred_pc, mesh), 2)
 
     def p2m_batch_visualize(self, batch_input, batch_output, faces, atmost=3):
