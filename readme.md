@@ -33,11 +33,11 @@ You should specify your configuration in a `yml` file, which can override defaul
 
 ### Datasets
 
-We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. The official tensorflow implementation provides a subset of shapenet for it, you can download it [here](https://drive.google.com/drive/folders/131dH36qXCabym1JjSmEpSQZg4dmZVQid). Extract it and place it in the `data_tf` directory as follows. 
+We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. The official tensorflow implementation provides a subset of shapenet for it, you can download it [here](https://drive.google.com/drive/folders/131dH36qXCabym1JjSmEpSQZg4dmZVQid). Extract it and place it in the `data_tf` directory as follows. You should also download some meta files [here](xxx).
 
 **P.S. **In case more data is needed, another larger data package of shapenet is also [available](https://drive.google.com/file/d/1Z8gt4HdPujBNFABYrthhau9VZW10WWYe/view). You can extract it and place it in the `data` directory. But this would take much time and need about 300GB storage.
 
-```
+```shell
 datasets/data
 ├── ellipsoid
 │   ├── face1.obj
@@ -52,16 +52,7 @@ datasets/data
     ├── data_tf (standard data used in official implementation)
     │   ...
     └── meta
-        ├── shapenet.json
-        ├── shapenet_labels.pkl
-        ├── test_all.txt
-        ├── test_plane.txt
-        ├── test_small.txt
-        ├── test_tf.txt
-        ├── train_all.txt
-        ├── train_plane.txt
-        ├── train_small.txt
-        └── train_tf.txt
+        ...
 ```
 
 Difference between the two versions of dataset is worth to be explained:
