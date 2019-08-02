@@ -160,12 +160,13 @@ class Evaluator(CheckpointRunner):
             self.summary_writer.add_scalar("eval_" + key, scalar, self.total_step_count + 1)
 
     def average_of_average_meters(self, average_meters):
-        if self.weighted_mean:
-            s = sum([meter.sum for meter in average_meters])
-            c = sum([meter.count for meter in average_meters])
-            return s / c if c > 0 else 0.
-        else:
-            return sum([meter.avg for meter in average_meters]) / len(average_meters)
+        s = sum([meter.sum for meter in average_meters])
+        c = sum([meter.count for meter in average_meters])
+        weighted_avg = s / c if c > 0 else 0.
+        avg = sum([meter.avg for meter in average_meters]) / len(average_meters)
+        ret = AverageMeter()
+        ret.val, ret.avg = avg, weighted_avg
+        return ret
 
     def get_result_summary(self):
         if self.options.model.name == "pixel2mesh":

@@ -81,6 +81,8 @@ options.test.dataset = []
 options.test.summary_steps = 50
 options.test.batch_size = 4
 options.test.shuffle = False
+# we return both from evaluator now, so this is not needed any more
+# keep it here for compatibility
 options.test.weighted_mean = False
 
 options.optim = edict()
@@ -160,8 +162,6 @@ def reset_options(options, args, phase='train'):
         options.dataset.predict.folder = args.folder
     if hasattr(args, "gpus") and args.gpus:
         options.num_gpus = args.gpus
-    if hasattr(args, "weighted_mean"):
-        options.test.weighted_mean = args.weighted_mean
     if hasattr(args, "shuffle") and args.shuffle:
         options.train.shuffle = options.test.shuffle = True
 
