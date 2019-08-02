@@ -35,7 +35,7 @@ You should specify your configuration in a `yml` file, which can override defaul
 
 We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. The official tensorflow implementation provides a subset of ShapeNet for it, you can download it [here](https://drive.google.com/drive/folders/131dH36qXCabym1JjSmEpSQZg4dmZVQid). Extract it and link it to `data_tf` directory as follows. Before that, some meta files [here](https://github.com/noahcao/Pixel2Mesh/blob/fc2dd4f5b4920f073c1f67fdc3f35d5404e01a18/xxx) will help you establish the folder tree, demonstrated as follows.
 
-**P.S. ** In case more data is needed, another larger data package of ShapeNet is also [available](https://drive.google.com/file/d/1Z8gt4HdPujBNFABYrthhau9VZW10WWYe/view). You can extract it and place it in the `data` directory. But this would take much time and needs about 300GB storage.
+**P.S.** In case more data is needed, another larger data package of ShapeNet is also [available](https://drive.google.com/file/d/1Z8gt4HdPujBNFABYrthhau9VZW10WWYe/view). You can extract it and place it in the `data` directory. But this would take much time and needs about 300GB storage.
 
 ```
 datasets/data
