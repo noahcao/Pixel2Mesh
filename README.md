@@ -12,6 +12,7 @@ This is an implementation of Pixel2Mesh in PyTorch. Besides, we also:
 
 Current version only supports training and inference on GPU. It works well under dependencies as follows:
 
+- Ubuntu 16.04 / 18.04
 - Python 3.7
 - PyTorch 1.1
 - CUDA 9.0 (10.0 should also work)
