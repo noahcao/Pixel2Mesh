@@ -1,10 +1,10 @@
 # Pixel2Mesh
 
-This is an implementation of Pixel2Mesh in Pytorch. Besides, we also:
+This is an implementation of Pixel2Mesh in PyTorch. Besides, we also:
 
-* provide retrained Pixel2Mesh checkpoints. Besides, the pretrained tensorflow pretrained model provided in [official implementation](https://github.com/nywang16/Pixel2Mesh) is also converted into a pytorch checkpoint file for convenience. 
-* provide a modified version of Pixel2Mesh whose backbone is ResNet instead of VGG.
-* clarify some details in previous implementation and provide a flexible training framework.
+* Provide retrained Pixel2Mesh checkpoints. Besides, the pretrained tensorflow pretrained model provided in [official implementation](https://github.com/nywang16/Pixel2Mesh) is also converted into a PyTorch checkpoint file for convenience. 
+* Provide a modified version of Pixel2Mesh whose backbone is ResNet instead of VGG.
+* Clarify some details in previous implementation and provide a flexible training framework.
 
 ## Get Started
 
@@ -13,7 +13,7 @@ This is an implementation of Pixel2Mesh in Pytorch. Besides, we also:
 Current version only supports training and inference on GPU. It works well under dependencies as follows:
 
 -   PyTorch 1.1
--   CUDA 9.0
+-   CUDA 9.0 (10.0 should also work)
 -   OpenCV 4.1
 -   Scipy 1.3
 -   Scikit-Image 0.15
@@ -24,7 +24,7 @@ Some minor dependencies are also needed, for which the latest version provided b
 
 Two another steps to prepare the codebase:
 
-1.   `git submodule update --init`  to get  [Neural Renderer](https://github.com/daniilidis-group/neural_renderer)  ready.
+1.  `git submodule update --init`  to get  [Neural Renderer](https://github.com/daniilidis-group/neural_renderer)  ready.
 2.  `python setup.py install`  in directory  `external/chamfer`  and  `external/neural_renderer`  to compile the modules.
 
 ### Configuration
@@ -33,11 +33,11 @@ You should specify your configuration in a `yml` file, which can override defaul
 
 ### Datasets
 
-We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. The official tensorflow implementation provides a subset of shapenet for it, you can download it [here](https://drive.google.com/drive/folders/131dH36qXCabym1JjSmEpSQZg4dmZVQid). Extract it and place it in the `data_tf` directory as follows. You should also download some meta files [here](xxx).
+We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. The official tensorflow implementation provides a subset of ShapeNet for it, you can download it [here](https://drive.google.com/drive/folders/131dH36qXCabym1JjSmEpSQZg4dmZVQid). Extract it and link it to `data_tf` directory as follows. Before that, some meta files [here](xxx) will help you establish the folder tree, demonstrated as follows.
 
-**P.S. **In case more data is needed, another larger data package of shapenet is also [available](https://drive.google.com/file/d/1Z8gt4HdPujBNFABYrthhau9VZW10WWYe/view). You can extract it and place it in the `data` directory. But this would take much time and need about 300GB storage.
+**P.S. ** In case more data is needed, another larger data package of ShapeNet is also [available](https://drive.google.com/file/d/1Z8gt4HdPujBNFABYrthhau9VZW10WWYe/view). You can extract it and place it in the `data` directory. But this would take much time and needs about 300GB storage.
 
-```shell
+```text
 datasets/data
 ├── ellipsoid
 │   ├── face1.obj
@@ -48,37 +48,43 @@ datasets/data
 │   ... (.pth files)
 └── shapenet
     ├── data (larger data package, optional)
-    │   ...
+    │   ├── 02691156
+    │   │   └── 3a123ae34379ea6871a70be9f12ce8b0_02.dat
+    │   ├── 02828884
+    │   └── ...
     ├── data_tf (standard data used in official implementation)
-    │   ...
+    │   ├── 02691156 (put the folders directly in data_tf)
+    │   │   └── 10115655850468db78d106ce0a280f87
+    │   ├── 02828884
+    │   └── ...
     └── meta
         ...
 ```
 
-Difference between the two versions of dataset is worth to be explained:
+Difference between the two versions of dataset is worth some explanation:
 
-* `data_tf` has images of 137x137 resolution and four channels (RGB + alpha), 175,132 samples for training and 43,783  for evaluation. 
-* `data` has RGB images of 224x224 resolution with background set all white. It divided xxx for training and xxx for evaluation.
+* `data_tf` has images of 137x137 resolution and four channels (RGB + alpha), 175,132 samples for training and 43,783 for evaluation. 
+* `data` has RGB images of 224x224 resolution with background set all white. It divides xxx for training and xxx for evaluation.
 
 We trained model with both datasets and evaluated on both benchmarks. To save time and align our results with the official paper/implementation, we use `data_tf` by default.
 
 ### Train your own model
 
-````shell
+```shell
 python entrypoint_train.py --name xxx --options path_to_yaml
-````
+```
 
 **P.S.** To train on slurm clusters, we also provide settings reference. Refer to `slurm` folder for details.
 
 ### Evaluation
 
 ```shell
-python entrypoint_eval.py --options path_to_yaml --checkpoint dir_to_pth
+python entrypoint_eval.py --options path_to_yaml --checkpoint path_to_pth
 ```
 
 ## Results
 
-We provide results from the implementation test by us here.
+We provide results from the implementation tested by us here.
 
 First, the [official tensorflow implementation](https://github.com/nywang16/Pixel2Mesh) reports much higher performance than claimed in the [original paper](https://arxiv.org/abs/1804.01654). The results are listed as follows, which is close to that reported in [MeshRCNN](https://arxiv.org/abs/1906.02739).
 
@@ -100,37 +106,42 @@ First, the [official tensorflow implementation](https://github.com/nywang16/Pixe
 | *Mean*        |         | **65.22** | **78.80** | **0.482** | **2.418** |
 | *Weighted-mean* |              | **66.56** | **80.17** | **0.439** | **2.545** |
 
-The original paper evaluates based on simple mean, without considering different categories containing different number of samples while some later papers use weighted-mean to calculate final performance. We report results under both two metrics for caution.
-
-**XXXXX Evaluation**
+The original paper evaluates based on simple mean, without considerations of different categories containing different number of samples, while some later papers use weighted-mean to calculate final performance. We report results under both two metrics for caution.
 
 ### Pretrained checkpoints
 
-We provide scripts to transform tensorflow checkpoints into pytorch .pth files in `utils/migration`. The checkpoint converted from official pretrained model can be downloaded [here](...). As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here]() (**performance xxx**).  
+* **Migrated:** We provide scripts to migrate tensorflow checkpoints into PyTorch `.pth` files in `utils/migration`. The checkpoint converted from official pretrained model can be downloaded [here](...).
+* **VGG backbone:** We also trained a model with almost identical settings, using VGG as backbone, with subtle different choices of camera intrinsics among [other settings](...), but the training is still running (will be added once completed).
+* **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](). 
+
+The performances of all these checkpoints are listed in the following table:
+
+to be added
 
 ## Details of improvement
 
 We explain some improvement of this version of implementation compared with the official version here.
 
-* **larger batch size:** We support larger batch size on multiple GPUs for training. Since Chamfer distances cannot be calculated if samples in a batch have different points, instead of resampling points, we simply upsample/downsample from the dataset.
+* **Larger batch size:** We support larger batch size on multiple GPUs for training. Since Chamfer distances cannot be calculated if samples in a batch with different ground-truth pointcloud, "resizing" the pointcloud is necessary. Instead of resampling points, we simply upsample/downsample from the dataset.
 * **Better backbone:** We enable replacing VGG by ResNet50 for model backbone. The training progress is more stable and final performance is higher. 
 * **More stable training:** We do normalization on the deformed sphere, so that it's deformed at location $(0,0,0)$; we use a threshold activation on $z$-axis during projection, so that $z$ will always be positive or negative and never be $0$. These seem not to result in better performance but more stable training loss.
+
 ## Demo
 
 For a quick look around, follow the following steps:
 
 1. `git clone https://github.com/noahcao/Pixel2Mesh`
 2. Do the installation as instructed in the last step
-3. Download our best checkpoint [here](to be added), and extract it under your Pixel2Mesh directory
-4. Run `python --name predict --options experiments/to_be_added.yml --checkpoint to_be_added --folder datasets/examples`
+3. Download our best checkpoint [here](to be added)
+4. Run `python --name predict --options experiments/to_be_added.yml --checkpoint /path/to/your/checkpoint --folder datasets/examples`
 
 We provide demos generated by our implementation in `datasets/examples`. Here are some samples:
 
 [add examples]
 
-## Some issues
+## Some known issues
 
-We tried to pretrain the original mini-VGG (fewer channels than standard VGG) on ImageNet, and we release our pretrained results [here](to be added). However, using VGG with pretrained weights would backfire, resulting in loss turning **NaN**, for reasons we are not sure till now.
+We tried to pretrain the original mini-VGG (fewer channels than standard VGG) on ImageNet, and we release our pretrained results [here](to be added). However, using VGG with pretrained weights would backfire, resulting in loss turning **NaN**, for reasons we are not sure so far.
 
 ## Acknowledgements
 
