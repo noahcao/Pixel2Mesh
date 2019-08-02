@@ -117,7 +117,6 @@ logs/
 datasets/data
 datasets/extras
 datasets/examples/*.obj
-datasets/examples/*.gif
 summary
 checkpoints
 

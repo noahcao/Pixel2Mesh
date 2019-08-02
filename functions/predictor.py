@@ -104,10 +104,14 @@ class Predictor(CheckpointRunner):
                         image = inputs["images_orig"][i].cpu().numpy()
                         ret = image
                         for k, vert in enumerate(verts):
-                            vert = rot_matrix.dot((vert - mesh_center).T).T + mesh_center + \
-                                   np.array(self.options.dataset.mesh_pos)
-                            rend_result = self.renderer.visualize_reconstruction(None, vert, self.ellipsoid.faces[k],
-                                                                                 image, mesh_only=True,
+                            vert = rot_matrix.dot((vert - mesh_center).T).T + mesh_center
+                            rend_result = self.renderer.visualize_reconstruction(None,
+                                                                                 vert + \
+                                                                                 np.array(
+                                                                                     self.options.dataset.mesh_pos),
+                                                                                 self.ellipsoid.faces[k],
+                                                                                 image,
+                                                                                 mesh_only=True,
                                                                                  color=color)
                             ret = np.concatenate((ret, rend_result), axis=2)
                             verts[k] = vert

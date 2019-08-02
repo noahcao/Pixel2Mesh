@@ -134,9 +134,15 @@ You may notice another differences on choices of hyper-parameters if you look in
 
 ## Demo
 
-We provide demos generated with images in [datasets/examples](datasets/examples). Here are some samples:
+We provide demos generated with images in [datasets/examples](datasets/examples) on our ResNet checkpoint. Here are some samples:
 
-[add examples]
+![](datasets/examples/airplane.gif)
+
+![](datasets/examples/lamp.gif)
+
+![](datasets/examples/table.gif)
+
+![](datasets/examples/display.gif)
 
 You can do inference on your own image folder by running
 
