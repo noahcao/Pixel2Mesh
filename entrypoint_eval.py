@@ -16,9 +16,13 @@ def parse_args():
         update_options(args.options)
 
     parser.add_argument('--batch-size', help='batch size', type=int)
-    parser.add_argument('--checkpoint', help='trained model file', type=str, required=True)
+    parser.add_argument('--shuffle', help='shuffle samples', default=False, action='store_true')
+    parser.add_argument('--checkpoint', help='trained checkpoint file', type=str, required=True)
     parser.add_argument('--version', help='version of task (timestamp by default)', type=str)
-    parser.add_argument('--name', required=True, type=str)
+    parser.add_argument('--name', help='subfolder name of this experiment', required=True, type=str)
+    parser.add_argument('--gpus', help='number of GPUs to use', type=int)
+    parser.add_argument('--weighted-mean', action='store_true', help='use weighted mean metrics (mean by default)',
+                        default=False)
 
     args = parser.parse_args()
 

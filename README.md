@@ -80,8 +80,10 @@ python entrypoint_train.py --name xxx --options path_to_yaml
 
 ### Evaluation
 
+Take evaluation on our checkpoint for example:
+
 ```
-python entrypoint_eval.py --options path_to_yaml --checkpoint path_to_pth
+python entrypoint_eval.py --name resnet_eval --options experiments/default/resnet.yml --checkpoint checkpoints/resnet.pth.tar --gpus 1 --shuffle
 ```
 
 ## Results
@@ -114,7 +116,7 @@ The original paper evaluates based on simple mean, without considerations of dif
 
 - **Migrated:** We provide scripts to migrate tensorflow checkpoints into PyTorch `.pth` files in [utils/migrations](utils/migrations). The checkpoint converted from official pretrained model can be downloaded [here](https://github.com/noahcao/Pixel2Mesh/blob/fc2dd4f5b4920f073c1f67fdc3f35d5404e01a18/...).
 - **VGG backbone:** We also trained a model with almost identical settings, using VGG as backbone, with subtle different choices of camera intrinsics among [other settings](https://github.com/noahcao/Pixel2Mesh/blob/fc2dd4f5b4920f073c1f67fdc3f35d5404e01a18/...), but the training is still running (will be added once completed).
-- **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](https://github.com/noahcao/Pixel2Mesh/blob/fc2dd4f5b4920f073c1f67fdc3f35d5404e01a18).
+- **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](to be added). The training takes about 5 days on eight 1080 Ti GPUs. Refer to [yml](resnet.yml) for the settings of this training.
 
 The performances of all these checkpoints are listed in the following table:
 
@@ -127,6 +129,8 @@ We explain some improvement of this version of implementation compared with the 
 - **Larger batch size:** We support larger batch size on multiple GPUs for training. Since Chamfer distances cannot be calculated if samples in a batch with different ground-truth pointcloud, "resizing" the pointcloud is necessary. Instead of resampling points, we simply upsample/downsample from the dataset.
 - **Better backbone:** We enable replacing VGG by ResNet50 for model backbone. The training progress is more stable and final performance is higher.
 - **More stable training:** We do normalization on the deformed sphere, so that it's deformed at location $(0,0,0)$; we use a threshold activation on $z$-axis during projection, so that $z$ will always be positive or negative and never be $0$. These seem not to result in better performance but more stable training loss.
+
+You may notice another differences on choices of hyper-parameters if you look into the configuration. Most of these changes are unintentional and definitely not a result of careful tuning.
 
 ## Demo
 

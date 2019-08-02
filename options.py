@@ -1,5 +1,6 @@
 import os
 import pprint
+from argparse import ArgumentParser
 from datetime import datetime
 
 import numpy as np
@@ -124,10 +125,16 @@ def update_options(options_file):
 
 
 def gen_options(options_file):
-    cfg = dict(options)
-    for k, v in cfg.items():
-        if isinstance(v, edict):
-            cfg[k] = dict(v)
+    def to_dict(ed):
+        ret = dict(ed)
+        for k, v in ret.items():
+            if isinstance(v, edict):
+                ret[k] = to_dict(v)
+            elif isinstance(v, np.ndarray):
+                ret[k] = v.tolist()
+        return ret
+
+    cfg = to_dict(options)
 
     with open(options_file, 'w') as f:
         yaml.safe_dump(dict(cfg), f, default_flow_style=False)
@@ -151,6 +158,12 @@ def reset_options(options, args, phase='train'):
         options.checkpoint = args.checkpoint
     if hasattr(args, "folder") and args.folder:
         options.dataset.predict.folder = args.folder
+    if hasattr(args, "gpus") and args.gpus:
+        options.num_gpus = args.gpus
+    if hasattr(args, "weighted_mean"):
+        options.test.weighted_mean = args.weighted_mean
+    if hasattr(args, "shuffle") and args.shuffle:
+        options.train.shuffle = options.test.shuffle = True
 
     options.name = args.name
 
@@ -179,3 +192,12 @@ def reset_options(options, args, phase='train'):
     writer = SummaryWriter(options.summary_dir)
 
     return logger, writer
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser("Read options and freeze")
+    parser.add_argument("--input", type=str, required=True)
+    parser.add_argument("--output", type=str, required=True)
+    args = parser.parse_args()
+    update_options(args.input)
+    gen_options(args.output)

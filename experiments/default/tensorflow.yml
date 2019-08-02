@@ -1,0 +1,77 @@
+checkpoint: null
+checkpoint_dir: checkpoints
+dataset:
+  camera_c:
+  - 112.0
+  - 112.0
+  camera_f:
+  - 250.0
+  - 250.0
+  mesh_pos:
+  - 0.0
+  - 0.0
+  - 0.0
+  name: shapenet
+  normalization: false
+  num_classes: 13
+  predict:
+    folder: /tmp
+  shapenet:
+    num_points: 9000
+    resize_with_constant_border: true
+  subset_eval: test_tf
+  subset_train: train_tf
+log_dir: logs
+log_level: info
+loss:
+  weights:
+    chamfer:
+    - 1.0
+    - 1.0
+    - 1.0
+    chamfer_opposite: 0.55
+    constant: 1.0
+    edge: 0.1
+    laplace: 0.5
+    move: 0.033
+    normal: 0.00016
+    reconst: 0.0
+model:
+  align_with_tensorflow: true
+  backbone: vgg16
+  coord_dim: 3
+  gconv_activation: true
+  hidden_dim: 256
+  last_hidden_dim: 128
+  name: pixel2mesh
+  z_threshold: 0
+name: p2m
+num_gpus: 1
+num_workers: 16
+optim:
+  adam_beta1: 0.9
+  lr: 1.0e-06
+  lr_factor: 0.1
+  lr_step:
+  - 30
+  - 45
+  name: adam
+  sgd_momentum: 0.9
+  wd: 1.0e-06
+pin_memory: true
+summary_dir: summary
+test:
+  batch_size: 24
+  dataset: []
+  shuffle: true
+  summary_steps: 5
+  weighted_mean: false
+train:
+  batch_size: 1
+  checkpoint_steps: 10000
+  num_epochs: 2
+  shuffle: true
+  summary_steps: 1
+  test_epochs: 1
+  use_augmentation: true
+version: null
