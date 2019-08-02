@@ -1,4 +1,0 @@
-based_on:
-  - tensorflow_align_every_steps_8gpus.yml
-test:
-  weighted_mean: true
