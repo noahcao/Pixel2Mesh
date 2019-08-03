@@ -29,10 +29,6 @@ Two another steps to prepare the codebase:
 1. `git submodule update --init` to get [Neural Renderer](https://github.com/daniilidis-group/neural_renderer) ready.
 2. `python setup.py install` in directory [external/chamfer](external/chamfer) and `external/neural_renderer` to compile the modules.
 
-### Configuration
-
-You should specify your configuration in a `yml` file, which can override default settings in [options.py](options.py). We provide some examples in the [experiments](experiments) directory. If you just want to look around, you don't have to change everything. Options provided in [experiments/default](experiments/default) are everything you need.
-
 ### Datasets
 
 We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. The official tensorflow implementation provides a subset of ShapeNet for it, you can download it [here](https://drive.google.com/drive/folders/131dH36qXCabym1JjSmEpSQZg4dmZVQid). Extract it and link it to `data_tf` directory as follows. Before that, some meta files [here](https://drive.google.com/file/d/16d9druvCpsjKWsxHmsTD5HSOWiCWtDzo/view?usp=sharing) will help you establish the folder tree, demonstrated as follows.
@@ -68,22 +64,26 @@ Difference between the two versions of dataset is worth some explanation:
 - `data_tf` has images of 137x137 resolution and four channels (RGB + alpha), 175,132 samples for training and 43,783 for evaluation.
 - `data` has RGB images of 224x224 resolution with background set all white. It contains altogether 1,050,240 for training and evaluation.
 
-We trained model with both datasets and evaluated on both benchmarks. To save time and align our results with the official paper/implementation, we use `data_tf` by default.
+*We trained model with both datasets and evaluated on both benchmarks. To save time and align our results with the official paper/implementation, we use `data_tf` by default.*
 
-### Train your own model
+### Usage
+
+#### Configuration
+
+You can modify configuration in a `yml` file for training/evaluation. It overrides default settings in `options.py`. We provide some examples in the `experiments` directory. 
+
+#### Training
 
 ```
-python entrypoint_train.py --name xxx --options path_to_yaml
+python entrypoint_train.py --name xxx --options path/to/yaml
 ```
 
 **P.S.** To train on slurm clusters, we also provide settings reference. Refer to [slurm](slurm) folder for details.
 
-### Evaluation
+#### Evaluation
 
-Take evaluation on our checkpoint for example:
-
-```
-python entrypoint_eval.py --name resnet_eval --options experiments/default/resnet.yml --checkpoint checkpoints/resnet.pth.tar --gpus 1 --shuffle
+```shell
+python entrypoint_eval.py --name xxx --options path/to/yml --checkpoint path/to/checkpoint
 ```
 
 ## Results
@@ -114,11 +114,10 @@ The original paper evaluates based on simple mean, without considerations of dif
 
 ### Pretrained checkpoints
 
-- **Migrated:** We provide scripts to migrate tensorflow checkpoints into PyTorch `.pth` files in [utils/migrations](utils/migrations). The checkpoint converted from official pretrained model can be downloaded [here](https://drive.google.com/file/d/1Gk3M4KQekEenG9qQm60OFsxNar0sG8bN/view?usp=sharing). We find that there is a performance drop (79.51 vs. 80.17), although we tried to align the ops of these two as close as possible.
-- **VGG backbone:** We also trained a model with almost identical settings, using VGG as backbone, with subtle different choices of camera intrinsics among other settings, but the training is still running (will be added once completed).
-- **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](https://drive.google.com/file/d/1pZm_IIWDUDje6gRZHW-GDhx5FCDM2Qg_/view?usp=sharing). The training takes about 5 days on eight 1080 Ti GPUs. Refer to [yml](experiments/default/resnet.yml) for the settings of this training.
+- **VGG backbone:** The checkpoint converted from official pretrained model  (based on VGG) can be downloaded [here](https://drive.google.com/file/d/1Gk3M4KQekEenG9qQm60OFsxNar0sG8bN/view?usp=sharing). (scripts to migrate tensorflow checkpoints into `.pth` are available in `utils/migrations`. )
+- **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](https://drive.google.com/file/d/1pZm_IIWDUDje6gRZHW-GDhx5FCDM2Qg_/view?usp=sharing). 
 
-The performances of all these checkpoints, as compared to the official result, are listed below:
+We evaluated some models and list the performance as follows. Due to time and computation limit, the ResNet model has not been trained in detail and sufficiently. 
 
 <table>
   <thead>
@@ -132,7 +131,7 @@ The performances of all these checkpoints, as compared to the official result, a
   </thead>
   <tbody>
     <tr>
-      <td rowspan=2>Official Result</td>
+      <td rowspan=2>Official Result (tensorflow)</td>
       <td>Mean</td>
       <td>0.482</td>
       <td>65.22</td>
@@ -170,7 +169,7 @@ The performances of all these checkpoints, as compared to the official result, a
       <td>66.13</td>
       <td>80.13</td>
     </tr>
-  </tbody>
+  </tbody> 
 </table>
 
 ## Details of Improvement
@@ -185,7 +184,7 @@ You may notice another differences on choices of hyper-parameters if you look in
 
 ## Demo
 
-We provide demos generated with images in [datasets/examples](datasets/examples) on our ResNet checkpoint. Here are some samples:
+Generated mesh samples are provided in [datasets/examples](datasets/examples) from our ResNet model. Three mesh models in a line are deformed from a single ellipsoid mesh with different number of vertices (156 vs 268 vs 2466) as set in the original paper. 
 
 ![](datasets/examples/airplane.gif)
 
@@ -197,15 +196,11 @@ We provide demos generated with images in [datasets/examples](datasets/examples)
 
 You can do inference on your own image folder by running
 
+```shell
+python entrypoint_predict.py --options /path/to/yml --checkpoint /path/to/checkpoint --folder /path/to/images
 ```
-python --name predict --options /path/to/yml --checkpoint /path/to/checkpoint --folder /path/to/your/image/folder
-```
-
-## Known Issues
-
-- Currently, CPU inference is not supported. CUDA is required for training, evaluation and prediction.
-- We tried to pretrain the original mini-VGG (fewer channels than standard VGG) on ImageNet, and we release our pretrained results [here](https://drive.google.com/file/d/1kODNfwPBPQIYPQTki4ev5FyXK_UGfL-w/view?usp=sharing). However, using VGG with pretrained weights would backfire, resulting in loss turning **NaN**, for reasons we are not sure so far.
 
 ## Acknowledgements
 
 Our work is based on the official version of [Pixel2Mesh](https://github.com/nywang16/Pixel2Mesh); Some part of code are borrowed from [a previous PyTorch implementation of Pixel2Mesh](https://github.com/Tong-ZHAO/Pixel2Mesh-Pytorch), even though this version seems incomplete. The packed files for two version of datasets are also provided by them two. Most codework is done by [Yuge Zhang](https://github.com/ultmaster).
+
