@@ -64,7 +64,7 @@ Difference between the two versions of dataset is worth some explanation:
 - `data_tf` has images of 137x137 resolution and four channels (RGB + alpha), 175,132 samples for training and 43,783 for evaluation.
 - `data` has RGB images of 224x224 resolution with background set all white. It contains altogether 1,050,240 for training and evaluation.
 
-*We trained model with both datasets and evaluated on both benchmarks. To save time and align our results with the official paper/implementation, we use `data_tf` by default.*
+*P.S. We trained model with both datasets and evaluated on both benchmarks. To save time and align our results with the official paper/implementation, we use `data_tf` by default.*
 
 ### Usage
 
@@ -86,13 +86,15 @@ python entrypoint_train.py --name xxx --options path/to/yaml
 python entrypoint_eval.py --name xxx --options path/to/yml --checkpoint path/to/checkpoint
 ```
 
-### Inference
+#### Inference
 
 You can do inference on your own images by a simple command:
 
 ``` 
 python entrypoint_predict.py --options /path/to/yml --checkpoint /path/to/checkpoint --folder /path/to/images
 ```
+
+*P.S. we only support do training/evaluation/inference with GPU by default.*
 
 ## Results
 
@@ -151,7 +153,7 @@ We tested performance of some models. The [official tensorflow implementation](h
   </tbody> 
 </table>
 
-*P.S. Due to time limit, the resnet checkpoint has not been trained in detail and sufficiently*
+*P.S. Due to time limit, the resnet checkpoint has not been trained in detail and sufficiently.*
 
 ### Pretrained checkpoints
 
