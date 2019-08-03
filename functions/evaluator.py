@@ -165,7 +165,10 @@ class Evaluator(CheckpointRunner):
         weighted_avg = s / c if c > 0 else 0.
         avg = sum([meter.avg for meter in average_meters]) / len(average_meters)
         ret = AverageMeter()
-        ret.val, ret.avg = avg, weighted_avg
+        if self.weighted_mean:
+            ret.val, ret.avg = avg, weighted_avg
+        else:
+            ret.val, ret.avg = weighted_avg, avg
         return ret
 
     def get_result_summary(self):

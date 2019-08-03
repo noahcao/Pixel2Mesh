@@ -81,8 +81,6 @@ options.test.dataset = []
 options.test.summary_steps = 50
 options.test.batch_size = 4
 options.test.shuffle = False
-# we return both from evaluator now, so this is not needed any more
-# keep it here for compatibility
 options.test.weighted_mean = False
 
 options.optim = edict()

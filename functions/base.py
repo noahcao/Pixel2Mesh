@@ -1,3 +1,4 @@
+import os
 import time
 from datetime import timedelta
 from logging import Logger
@@ -22,7 +23,17 @@ class CheckpointRunner(object):
         # GPUs
         if not torch.cuda.is_available() and self.options.num_gpus > 0:
             raise ValueError("CUDA not found yet number of GPUs is set to be greater than 0")
-        self.gpus = list(range(self.options.num_gpus))
+        if os.environ.get("CUDA_VISIBLE_DEVICES"):
+            logger.info("CUDA visible devices is activated here, number of GPU setting is not working")
+            self.gpus = list(map(int, os.environ["CUDA_VISIBLE_DEVICES"].split(",")))
+            self.options.num_gpus = len(self.gpus)
+            enumerate_gpus = list(range(self.options.num_gpus))
+            logger.info("CUDA is asking for " + str(self.gpus) + ", PyTorch to doing a mapping, changing it to " +
+                        str(enumerate_gpus))
+            self.gpus = enumerate_gpus
+        else:
+            self.gpus = list(range(self.options.num_gpus))
+            logger.info("Using GPUs: " + str(self.gpus))
 
         # initialize summary writer
         self.summary_writer = summary_writer

@@ -35,7 +35,7 @@ You should specify your configuration in a `yml` file, which can override defaul
 
 ### Datasets
 
-We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. The official tensorflow implementation provides a subset of ShapeNet for it, you can download it [here](https://drive.google.com/drive/folders/131dH36qXCabym1JjSmEpSQZg4dmZVQid). Extract it and link it to `data_tf` directory as follows. Before that, some meta files [here](https://github.com/noahcao/Pixel2Mesh/blob/fc2dd4f5b4920f073c1f67fdc3f35d5404e01a18/xxx) will help you establish the folder tree, demonstrated as follows.
+We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. The official tensorflow implementation provides a subset of ShapeNet for it, you can download it [here](https://drive.google.com/drive/folders/131dH36qXCabym1JjSmEpSQZg4dmZVQid). Extract it and link it to `data_tf` directory as follows. Before that, some meta files [here](https://drive.google.com/file/d/16d9druvCpsjKWsxHmsTD5HSOWiCWtDzo/view?usp=sharing) will help you establish the folder tree, demonstrated as follows.
 
 **P.S.** In case more data is needed, another larger data package of ShapeNet is also [available](https://drive.google.com/file/d/1Z8gt4HdPujBNFABYrthhau9VZW10WWYe/view). You can extract it and place it in the `data` directory. But this would take much time and needs about 300GB storage.
 
@@ -66,7 +66,7 @@ datasets/data
 Difference between the two versions of dataset is worth some explanation:
 
 - `data_tf` has images of 137x137 resolution and four channels (RGB + alpha), 175,132 samples for training and 43,783 for evaluation.
-- `data` has RGB images of 224x224 resolution with background set all white. It divides xxx for training and xxx for evaluation.
+- `data` has RGB images of 224x224 resolution with background set all white. It contains altogether 1,050,240 for training and evaluation.
 
 We trained model with both datasets and evaluated on both benchmarks. To save time and align our results with the official paper/implementation, we use `data_tf` by default.
 
@@ -114,13 +114,64 @@ The original paper evaluates based on simple mean, without considerations of dif
 
 ### Pretrained checkpoints
 
-- **Migrated:** We provide scripts to migrate tensorflow checkpoints into PyTorch `.pth` files in [utils/migrations](utils/migrations). The checkpoint converted from official pretrained model can be downloaded [here](https://github.com/noahcao/Pixel2Mesh/blob/fc2dd4f5b4920f073c1f67fdc3f35d5404e01a18/...).
-- **VGG backbone:** We also trained a model with almost identical settings, using VGG as backbone, with subtle different choices of camera intrinsics among [other settings](https://github.com/noahcao/Pixel2Mesh/blob/fc2dd4f5b4920f073c1f67fdc3f35d5404e01a18/...), but the training is still running (will be added once completed).
-- **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](to be added). The training takes about 5 days on eight 1080 Ti GPUs. Refer to [yml](resnet.yml) for the settings of this training.
+- **Migrated:** We provide scripts to migrate tensorflow checkpoints into PyTorch `.pth` files in [utils/migrations](utils/migrations). The checkpoint converted from official pretrained model can be downloaded [here](https://drive.google.com/file/d/1Gk3M4KQekEenG9qQm60OFsxNar0sG8bN/view?usp=sharing). We find that there is a performance drop (xxx vs. xxx), although we tried to align the ops of these two as close as possible.
+- **VGG backbone:** We also trained a model with almost identical settings, using VGG as backbone, with subtle different choices of camera intrinsics among other settings, but the training is still running (will be added once completed).
+- **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](https://drive.google.com/file/d/1pZm_IIWDUDje6gRZHW-GDhx5FCDM2Qg_/view?usp=sharing). The training takes about 5 days on eight 1080 Ti GPUs. Refer to [yml](experiments/default/resnet.yml) for the settings of this training.
 
-The performances of all these checkpoints are listed in the following table:
+The performances of all these checkpoints, as compared to the official result, are listed below:
 
-to be added
+<table>
+  <thead>
+    <tr>
+      <th>Checkpoint</th>
+      <th>Eval Protocol
+      <th>CD</th>
+      <th>F1$^{\tau}$</th>
+      <th>F1$^{2\tau}$</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan=2>Official Result</td>
+      <td>Mean</td>
+      <td>0.482</td>
+      <td>65.22</td>
+      <td>78.80</td>
+    </tr>
+    <tr>
+      <td>Weighted-mean</td>
+      <td>0.439</td>
+      <td><b>66.56</b></td>
+      <td><b>80.17</b></td>
+    </tr>
+    <tr>
+      <td rowspan=2>Migrated Checkpoint</td>
+      <td>Mean</td>
+      <td>0.498</td>
+      <td>64.21</td>
+      <td>78.03</td>
+    </tr>
+    <tr>
+      <td>Weighted-mean</td>
+      <td>0.451</td>
+      <td>65.67</td>
+      <td>79.51</td>
+    </tr>
+    <tr>
+      <td rowspan=2>ResNet</td>
+      <td>Mean</td>
+      <td><b>0.443</b></td>
+      <td><b>65.36</b></td>
+      <td><b>79.24</b></td>
+    </tr>
+    <tr>
+      <td>Weighted-mean</td>
+      <td><b>0.411</b></td>
+      <td>66.13</td>
+      <td>80.13</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Details of Improvement
 
@@ -153,7 +204,7 @@ python --name predict --options /path/to/yml --checkpoint /path/to/checkpoint --
 ## Known Issues
 
 - Currently, CPU inference is not supported. CUDA is required for training, evaluation and prediction.
-- We tried to pretrain the original mini-VGG (fewer channels than standard VGG) on ImageNet, and we release our pretrained results [here](to be added). However, using VGG with pretrained weights would backfire, resulting in loss turning **NaN**, for reasons we are not sure so far.
+- We tried to pretrain the original mini-VGG (fewer channels than standard VGG) on ImageNet, and we release our pretrained results [here](https://drive.google.com/file/d/1kODNfwPBPQIYPQTki4ev5FyXK_UGfL-w/view?usp=sharing). However, using VGG with pretrained weights would backfire, resulting in loss turning **NaN**, for reasons we are not sure so far.
 
 ## Acknowledgements
 
