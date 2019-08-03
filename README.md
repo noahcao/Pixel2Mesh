@@ -70,7 +70,7 @@ Difference between the two versions of dataset is worth some explanation:
 
 #### Configuration
 
-You can modify configuration in a `yml` file for training/evaluation. It overrides default settings in `options.py`. We provide some examples in the `experiments` directory. 
+You can modify configuration in a `yml` file for training/evaluation. It overrides dsefault settings in `options.py`. We provide some examples in the `experiments` directory. 
 
 #### Training
 
@@ -92,6 +92,8 @@ We provide results from the implementation tested by us here.
 
 First, the [official tensorflow implementation](https://github.com/nywang16/Pixel2Mesh) reports much higher performance than claimed in the [original paper](https://arxiv.org/abs/1804.01654). The results are listed as follows, which is close to that reported in [MeshRCNN](https://arxiv.org/abs/1906.02739).
 
+<center>
+
 | Category        | # of samples | F1$^{\tau}$ | F1$^{2\tau}$ | CD        | EMD       |
 | --------------- | ------------ | ----------- | ------------ | --------- | --------- |
 | firearm         | 2372         | 77.24       | 85.85        | 0.382     | 2.671     |
@@ -110,6 +112,8 @@ First, the [official tensorflow implementation](https://github.com/nywang16/Pixe
 | *Mean*          |              | **65.22**   | **78.80**    | **0.482** | **2.418** |
 | *Weighted-mean* |              | **66.56**   | **80.17**    | **0.439** | **2.545** |
 
+</center>
+
 The original paper evaluates based on simple mean, without considerations of different categories containing different number of samples, while some later papers use weighted-mean to calculate final performance. We report results under both two metrics for caution.
 
 ### Pretrained checkpoints
@@ -119,14 +123,16 @@ The original paper evaluates based on simple mean, without considerations of dif
 
 We evaluated some models and list the performance as follows. Due to time and computation limit, the ResNet model has not been trained in detail and sufficiently. 
 
+<center>
+
 <table>
   <thead>
     <tr>
       <th>Checkpoint</th>
       <th>Eval Protocol
       <th>CD</th>
-      <th>F1$^{\tau}$</th>
-      <th>F1$^{2\tau}$</th>
+      <th>$F_1^{\tau}$ </th>
+      <th>$F_1^{2\tau}$ </th>
     </tr>
   </thead>
   <tbody>
@@ -172,6 +178,8 @@ We evaluated some models and list the performance as follows. Due to time and co
   </tbody> 
 </table>
 
+</center>
+
 ## Details of Improvement
 
 We explain some improvement of this version of implementation compared with the official version here.
@@ -180,11 +188,9 @@ We explain some improvement of this version of implementation compared with the 
 - **Better backbone:** We enable replacing VGG by ResNet50 for model backbone. The training progress is more stable and final performance is higher.
 - **More stable training:** We do normalization on the deformed sphere, so that it's deformed at location $(0,0,0)$; we use a threshold activation on $z$-axis during projection, so that $z$ will always be positive or negative and never be $0$. These seem not to result in better performance but more stable training loss.
 
-You may notice another differences on choices of hyper-parameters if you look into the configuration. Most of these changes are unintentional and definitely not a result of careful tuning.
-
 ## Demo
 
-Generated mesh samples are provided in [datasets/examples](datasets/examples) from our ResNet model. Three mesh models in a line are deformed from a single ellipsoid mesh with different number of vertices (156 vs 268 vs 2466) as set in the original paper. 
+Generated mesh samples are provided in [datasets/examples](datasets/examples) from our ResNet model. Three mesh models in a line are deformed from a single ellipsoid mesh with different number of vertices (156 vs 268 vs 2466) as configurated in the original paper. 
 
 ![](datasets/examples/airplane.gif)
 
@@ -203,4 +209,3 @@ python entrypoint_predict.py --options /path/to/yml --checkpoint /path/to/checkp
 ## Acknowledgements
 
 Our work is based on the official version of [Pixel2Mesh](https://github.com/nywang16/Pixel2Mesh); Some part of code are borrowed from [a previous PyTorch implementation of Pixel2Mesh](https://github.com/Tong-ZHAO/Pixel2Mesh-Pytorch), even though this version seems incomplete. The packed files for two version of datasets are also provided by them two. Most codework is done by [Yuge Zhang](https://github.com/ultmaster).
-
