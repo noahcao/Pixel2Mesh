@@ -114,7 +114,7 @@ The original paper evaluates based on simple mean, without considerations of dif
 
 ### Pretrained checkpoints
 
-- **Migrated:** We provide scripts to migrate tensorflow checkpoints into PyTorch `.pth` files in [utils/migrations](utils/migrations). The checkpoint converted from official pretrained model can be downloaded [here](https://drive.google.com/file/d/1Gk3M4KQekEenG9qQm60OFsxNar0sG8bN/view?usp=sharing). We find that there is a performance drop (xxx vs. xxx), although we tried to align the ops of these two as close as possible.
+- **Migrated:** We provide scripts to migrate tensorflow checkpoints into PyTorch `.pth` files in [utils/migrations](utils/migrations). The checkpoint converted from official pretrained model can be downloaded [here](https://drive.google.com/file/d/1Gk3M4KQekEenG9qQm60OFsxNar0sG8bN/view?usp=sharing). We find that there is a performance drop (79.51 vs. 80.17), although we tried to align the ops of these two as close as possible.
 - **VGG backbone:** We also trained a model with almost identical settings, using VGG as backbone, with subtle different choices of camera intrinsics among other settings, but the training is still running (will be added once completed).
 - **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](https://drive.google.com/file/d/1pZm_IIWDUDje6gRZHW-GDhx5FCDM2Qg_/view?usp=sharing). The training takes about 5 days on eight 1080 Ti GPUs. Refer to [yml](experiments/default/resnet.yml) for the settings of this training.
 
