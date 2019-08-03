@@ -1,4 +1,4 @@
-Pixel2Mesh
+# Pixel2Mesh
 
 This is an implementation of Pixel2Mesh in PyTorch. Besides, we also:
 
@@ -33,7 +33,7 @@ Two another steps to prepare the codebase:
 
 We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. The official tensorflow implementation provides a subset of ShapeNet for it, you can download it [here](https://drive.google.com/drive/folders/131dH36qXCabym1JjSmEpSQZg4dmZVQid). Extract it and link it to `data_tf` directory as follows. Before that, some meta files [here](https://drive.google.com/file/d/16d9druvCpsjKWsxHmsTD5HSOWiCWtDzo/view?usp=sharing) will help you establish the folder tree, demonstrated as follows.
 
-**P.S.** In case more data is needed, another larger data package of ShapeNet is also [available](https://drive.google.com/file/d/1Z8gt4HdPujBNFABYrthhau9VZW10WWYe/view). You can extract it and place it in the `data` directory. But this would take much time and needs about 300GB storage.
+*P.S. In case more data is needed, another larger data package of ShapeNet is also [available](https://drive.google.com/file/d/1Z8gt4HdPujBNFABYrthhau9VZW10WWYe/view). You can extract it and place it in the `data` directory. But this would take much time and needs about 300GB storage.*
 
 ```
 datasets/data
@@ -78,7 +78,7 @@ You can modify configuration in a `yml` file for training/evaluation. It overrid
 python entrypoint_train.py --name xxx --options path/to/yaml
 ```
 
-**P.S.** To train on slurm clusters, we also provide settings reference. Refer to [slurm](slurm) folder for details.
+*P.S. To train on slurm clusters, we also provide settings reference. Refer to [slurm](slurm) folder for details.*
 
 #### Evaluation
 
@@ -96,21 +96,7 @@ python entrypoint_predict.py --options /path/to/yml --checkpoint /path/to/checkp
 
 ## Results
 
-The [official tensorflow implementation](https://github.com/nywang16/Pixel2Mesh) reports much higher performance than claimed in the [original paper](https://arxiv.org/abs/1804.01654) as follows. The results are listed as follows, which is close to that reported in [MeshRCNN](https://arxiv.org/abs/1906.02739). 
-
-| Metrics                         | $F1^{\tau}$ | $F1^{2\tau}$ | CD    | EMD   |
-| ------------------------------- | ----------- | ------------ | ----- | ----- |
-| Simple-Mean of all categories   | 65.22       | 78.80        | 0.482 | 2.418 |
-| Weighted-Mean of all categories | 66.56       | 80.17        | 0.439 | 2.545 |
-
-The original paper evaluates result on simple mean, without considerations of different categories containing different number of samples, while some later papers use weighted-mean. We report results under both two metrics for caution.
-
-### Pretrained checkpoints
-
-- **VGG backbone:** The checkpoint converted from official pretrained model  (based on VGG) can be downloaded [here](https://drive.google.com/file/d/1Gk3M4KQekEenG9qQm60OFsxNar0sG8bN/view?usp=sharing). (scripts to migrate tensorflow checkpoints into `.pth` are available in `utils/migrations`. )
-- **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](https://drive.google.com/file/d/1pZm_IIWDUDje6gRZHW-GDhx5FCDM2Qg_/view?usp=sharing). 
-
-We evaluated some models and list the performance as follows. Due to time and computation limit, the ResNet model has not been trained in detail and sufficiently. 
+We tested performance of some models. The [official tensorflow implementation](https://github.com/nywang16/Pixel2Mesh) reports much higher performance than claimed in the [original paper](https://arxiv.org/abs/1804.01654) as follows. The results are listed as follows, which is close to that reported in [MeshRCNN](https://arxiv.org/abs/1906.02739).  The original paper evaluates result on simple mean, without considerations of different categories containing different number of samples, while some later papers use weighted-mean. We report results under both two metrics for caution.
 
 <table>
   <thead>
@@ -118,13 +104,13 @@ We evaluated some models and list the performance as follows. Due to time and co
       <th>Checkpoint</th>
       <th>Eval Protocol
       <th>CD</th>
-      <th>F1^{\tau}</th>
-      <th>F1^{2\tau}</th>
+      <th>F1<sup>τ</sup></th>
+      <th>F1<sup>2τ</sup></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td rowspan=2>Official Result (tensorflow)</td>
+      <td rowspan=2>Official Pretrained (tensorflow)</td>
       <td>Mean</td>
       <td>0.482</td>
       <td>65.22</td>
@@ -164,6 +150,13 @@ We evaluated some models and list the performance as follows. Due to time and co
     </tr>
   </tbody> 
 </table>
+
+*P.S. Due to time limit, the resnet checkpoint has not been trained in detail and sufficiently*
+
+### Pretrained checkpoints
+
+- **VGG backbone:** The checkpoint converted from official pretrained model  (based on VGG) can be downloaded [here](https://drive.google.com/file/d/1Gk3M4KQekEenG9qQm60OFsxNar0sG8bN/view?usp=sharing). (scripts to migrate tensorflow checkpoints into `.pth` are available in `utils/migrations`. )
+- **ResNet backbone:** As we provide another backbone choice of resenet, we also provide a corresponding checkpoint [here](https://drive.google.com/file/d/1pZm_IIWDUDje6gRZHW-GDhx5FCDM2Qg_/view?usp=sharing). 
 
 ## Details of Improvement
 
