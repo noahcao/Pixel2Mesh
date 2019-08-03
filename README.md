@@ -86,13 +86,19 @@ python entrypoint_train.py --name xxx --options path/to/yaml
 python entrypoint_eval.py --name xxx --options path/to/yml --checkpoint path/to/checkpoint
 ```
 
+### Inference
+
+You can do inference on your own images by a simple command:
+
+``` 
+python entrypoint_predict.py --options /path/to/yml --checkpoint /path/to/checkpoint --folder /path/to/images
+```
+
 ## Results
 
 We provide results from the implementation tested by us here.
 
 First, the [official tensorflow implementation](https://github.com/nywang16/Pixel2Mesh) reports much higher performance than claimed in the [original paper](https://arxiv.org/abs/1804.01654). The results are listed as follows, which is close to that reported in [MeshRCNN](https://arxiv.org/abs/1906.02739).
-
-<center>
 
 | Category        | # of samples | F1$^{\tau}$ | F1$^{2\tau}$ | CD        | EMD       |
 | --------------- | ------------ | ----------- | ------------ | --------- | --------- |
@@ -112,8 +118,6 @@ First, the [official tensorflow implementation](https://github.com/nywang16/Pixe
 | *Mean*          |              | **65.22**   | **78.80**    | **0.482** | **2.418** |
 | *Weighted-mean* |              | **66.56**   | **80.17**    | **0.439** | **2.545** |
 
-</center>
-
 The original paper evaluates based on simple mean, without considerations of different categories containing different number of samples, while some later papers use weighted-mean to calculate final performance. We report results under both two metrics for caution.
 
 ### Pretrained checkpoints
@@ -123,16 +127,14 @@ The original paper evaluates based on simple mean, without considerations of dif
 
 We evaluated some models and list the performance as follows. Due to time and computation limit, the ResNet model has not been trained in detail and sufficiently. 
 
-<center>
-
 <table>
   <thead>
     <tr>
       <th>Checkpoint</th>
       <th>Eval Protocol
       <th>CD</th>
-      <th>$F_1^{\tau}$ </th>
-      <th>$F_1^{2\tau}$ </th>
+      <th>F1^{\tau} </th>
+      <th>F1^{2\tau} </th>
     </tr>
   </thead>
   <tbody>
@@ -178,8 +180,6 @@ We evaluated some models and list the performance as follows. Due to time and co
   </tbody> 
 </table>
 
-</center>
-
 ## Details of Improvement
 
 We explain some improvement of this version of implementation compared with the official version here.
@@ -199,12 +199,6 @@ Generated mesh samples are provided in [datasets/examples](datasets/examples) fr
 ![](datasets/examples/table.gif)
 
 ![](datasets/examples/display.gif)
-
-You can do inference on your own image folder by running
-
-```shell
-python entrypoint_predict.py --options /path/to/yml --checkpoint /path/to/checkpoint --folder /path/to/images
-```
 
 ## Acknowledgements
 
