@@ -1,4 +1,4 @@
-# Pixel2Mesh
+Pixel2Mesh
 
 This is an implementation of Pixel2Mesh in PyTorch. Besides, we also:
 
@@ -96,29 +96,14 @@ python entrypoint_predict.py --options /path/to/yml --checkpoint /path/to/checkp
 
 ## Results
 
-We provide results from the implementation tested by us here.
+The [official tensorflow implementation](https://github.com/nywang16/Pixel2Mesh) reports much higher performance than claimed in the [original paper](https://arxiv.org/abs/1804.01654) as follows. The results are listed as follows, which is close to that reported in [MeshRCNN](https://arxiv.org/abs/1906.02739). 
 
-First, the [official tensorflow implementation](https://github.com/nywang16/Pixel2Mesh) reports much higher performance than claimed in the [original paper](https://arxiv.org/abs/1804.01654). The results are listed as follows, which is close to that reported in [MeshRCNN](https://arxiv.org/abs/1906.02739).
+| Metrics                         | $F1^{\tau}$ | $F1^{2\tau}$ | CD    | EMD   |
+| ------------------------------- | ----------- | ------------ | ----- | ----- |
+| Simple-Mean of all categories   | 65.22       | 78.80        | 0.482 | 2.418 |
+| Weighted-Mean of all categories | 66.56       | 80.17        | 0.439 | 2.545 |
 
-| Category        | # of samples | F1$^{\tau}$ | F1$^{2\tau}$ | CD        | EMD       |
-| --------------- | ------------ | ----------- | ------------ | --------- | --------- |
-| firearm         | 2372         | 77.24       | 85.85        | 0.382     | 2.671     |
-| cellphone       | 1052         | 74.63       | 86.15        | 0.342     | 1.500     |
-| speaker         | 1618         | 54.11       | 70.77        | 0.633     | 2.318     |
-| cabinet         | 1572         | 66.50       | 81.85        | 0.331     | 1.615     |
-| lamp            | 2318         | 56.93       | 69.27        | 1.033     | 3.765     |
-| bench           | 1816         | 65.57       | 78.76        | 0.474     | 2.395     |
-| couch           | 3173         | 56.49       | 74.44        | 0.441     | 2.073     |
-| chair           | 6778         | 59.57       | 74.80        | 0.507     | 2.808     |
-| plane           | 4045         | 76.35       | 85.02        | 0.372     | 2.243     |
-| table           | 8509         | 71.44       | 83.38        | 0.385     | 2.021     |
-| monitor         | 1095         | 58.02       | 73.08        | 0.569     | 2.127     |
-| car             | 7496         | 70.59       | 86.43        | 0.242     | 3.335     |
-| watercraft      | 1939         | 60.39       | 74.56        | 0.558     | 2.558     |
-| *Mean*          |              | **65.22**   | **78.80**    | **0.482** | **2.418** |
-| *Weighted-mean* |              | **66.56**   | **80.17**    | **0.439** | **2.545** |
-
-The original paper evaluates based on simple mean, without considerations of different categories containing different number of samples, while some later papers use weighted-mean to calculate final performance. We report results under both two metrics for caution.
+The original paper evaluates result on simple mean, without considerations of different categories containing different number of samples, while some later papers use weighted-mean. We report results under both two metrics for caution.
 
 ### Pretrained checkpoints
 
@@ -133,8 +118,8 @@ We evaluated some models and list the performance as follows. Due to time and co
       <th>Checkpoint</th>
       <th>Eval Protocol
       <th>CD</th>
-      <th>F1^{\tau} </th>
-      <th>F1^{2\tau} </th>
+      <th>F1^{\tau}</th>
+      <th>F1^{2\tau}</th>
     </tr>
   </thead>
   <tbody>
@@ -184,7 +169,7 @@ We evaluated some models and list the performance as follows. Due to time and co
 
 We explain some improvement of this version of implementation compared with the official version here.
 
-- **Larger batch size:** We support larger batch size on multiple GPUs for training. Since Chamfer distances cannot be calculated if samples in a batch with different ground-truth pointcloud, "resizing" the pointcloud is necessary. Instead of resampling points, we simply upsample/downsample from the dataset.
+- **Larger batch size:** We support larger batch size on multiple GPUs for training. Since Chamfer distances cannot be calculated if samples in a batch with different ground-truth pointcloud size, "resizing" the pointcloud is necessary. Instead of resampling points, we simply upsample/downsample from the dataset.
 - **Better backbone:** We enable replacing VGG by ResNet50 for model backbone. The training progress is more stable and final performance is higher.
 - **More stable training:** We do normalization on the deformed sphere, so that it's deformed at location $(0,0,0)$; we use a threshold activation on $z$-axis during projection, so that $z$ will always be positive or negative and never be $0$. These seem not to result in better performance but more stable training loss.
 
