@@ -35,6 +35,8 @@ We use [ShapeNet](https://www.shapenet.org/) for model training and evaluation. 
 
 ~~*P.S. In case more data is needed, another larger data package of ShapeNet is also [available](https://drive.google.com/file/d/1Z8gt4HdPujBNFABYrthhau9VZW10WWYe/view). You can extract it and place it in the `data` directory. But this would take much time and needs about 300GB storage.*~~
 
+P.S.S. For the larger data package, we provide a temporal access here on [OneDrive](https://microsoftapc-my.sharepoint.com/:f:/g/personal/v-yugzh_microsoft_com/EucWIsg08qVKnCRxdCADzegBjU5zqjgQibgQbfeUCIbPsA?e=qskFoK). Will provide a long-term valid access once we confirm that is proper.
+
 ```
 datasets/data
 ├── ellipsoid
