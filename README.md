@@ -6,6 +6,9 @@ This is an implementation of Pixel2Mesh in PyTorch. Besides, we also:
 - Provide a modified version of Pixel2Mesh whose backbone is ResNet instead of VGG.
 - Clarify some details in previous implementation and provide a flexible training framework.
 
+**If you have any urgent question or issue, please contact jinkuncao@gmail.com.**
+
+
 ## Get Started
 
 ### Environment
