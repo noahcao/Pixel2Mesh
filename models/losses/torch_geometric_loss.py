@@ -67,7 +67,7 @@ def geometric_loss(gt_points: torch.tensor, pred_points: torch.tensor, height: i
     l2_loss = torch.nn.MSELoss()
     for views in range(3):
         rvec = np.random.randint(low=0, high=2 * 3.14, size=(3,)).astype(np.float64)
-        print(f"rotation vector is: ", rvec)
+        #print(f"rotation vector is: ", rvec)
 
         gt_normal = torch_normalize(gt_points)
         gt_focal = torch_focal(gt_normal, height, width)
