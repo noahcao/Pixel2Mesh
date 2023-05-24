@@ -46,17 +46,32 @@ def project_3D_to_2D(points: torch.tensor, rvec: torch.tensor, camera_matrix: np
 
 def calculate_loss(gt_points: torch.tensor, pred_points: torch.tensor, height: int, width: int, l2_loss):
     gt_points = torch.round(gt_points)
+    gt_points = gt_points.reshape(-1, 2)
+
     pred_points = torch.round(pred_points)
+    pred_points = pred_points.reshape(-1, 2)
 
     gt_pixels = torch.zeros((height, width))
     pred_pixels = torch.zeros((height, width))
 
-    for h in range(-(height // 2), (height // 2)):
-        for w in range(-(width // 2), (width // 2)):
-            if torch.any(torch.all(gt_points == torch.tensor([h, w]), dim=2)):
-                gt_pixels[h, w] = 1
-            elif torch.any(torch.all(pred_points == torch.tensor([h, w]), dim=2)):
-                pred_pixels[h, w] = 1
+    x_min = -192 // 2
+    x_max = 192 // 2
+    y_min = -256 // 2
+    y_max = 256 // 2
+
+    # Find gt pixels
+    mask = (gt_points[:, 0] >= x_min) & (gt_points[:, 0] <= x_max) & (gt_points[:, 1] >= y_min) & (
+                gt_points[:, 1] <= y_max)
+    x_indices = (gt_points[mask, 0] + x_max - 1).to(torch.int)
+    y_indices = (gt_points[mask, 1] + y_max - 1).to(torch.int)
+    gt_pixels[x_indices, y_indices] = 1
+
+    # Find pred pixels
+    mask = (pred_points[:, 0] >= x_min) & (pred_points[:, 0] <= x_max) & (pred_points[:, 1] >= y_min) & (
+                pred_points[:, 1] <= y_max)
+    x_indices = (pred_points[mask, 0] + x_max - 1).to(torch.int)
+    y_indices = (pred_points[mask, 1] + y_max - 1).to(torch.int)
+    pred_pixels[x_indices, y_indices] = 1
 
     loss = l2_loss(gt_pixels, pred_pixels)
     return loss
