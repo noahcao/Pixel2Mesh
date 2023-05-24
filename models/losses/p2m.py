@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from pyemd import emd
 from models.layers.chamfer_wrapper import ChamferDist
 
 
@@ -16,6 +16,22 @@ class P2MLoss(nn.Module):
             nn.Parameter(idx, requires_grad=False) for idx in ellipsoid.laplace_idx])
         self.edges = nn.ParameterList([
             nn.Parameter(edges, requires_grad=False) for edges in ellipsoid.edges])
+        self.emd_loss = 0.  # initialize EMD_loss as 0
+
+    #define the edm_loss function
+    def emd_loss(self, pred, gt):
+        """
+        :param pred: batch_size * num_points * 3
+        :param gt: batch_size * num_points * 3
+        :return: emd
+        """
+        batch_size, num_points, _ = pred.size()
+        emd_loss = 0
+        for i in range(batch_size):
+            emd_loss += emd(pred[i].view(-1).detach().cpu().numpy(),
+                            gt[i].view(-1).detach().cpu().numpy(),
+                            num_points)
+        return emd_loss / batch_size
 
     def edge_regularization(self, pred, edges):
         """
@@ -93,9 +109,11 @@ class P2MLoss(nn.Module):
             image_loss = self.image_loss(gt_images, outputs["reconst"])
 
         for i in range(3):
+            """
             dist1, dist2, idx1, idx2 = self.chamfer_dist(gt_coord, pred_coord[i])
             chamfer_loss += self.options.weights.chamfer[i] * (torch.mean(dist1) +
                                                                self.options.weights.chamfer_opposite * torch.mean(dist2))
+            """
             normal_loss += self.normal_loss(gt_normal, idx2, pred_coord[i], self.edges[i])
             edge_loss += self.edge_regularization(pred_coord[i], self.edges[i])
             lap, move = self.laplace_regularization(pred_coord_before_deform[i],
@@ -103,11 +121,16 @@ class P2MLoss(nn.Module):
             lap_loss += lap_const[i] * lap
             move_loss += lap_const[i] * move
 
+            # compute EDM_loss and add to overall loss
+            emd_loss_value = self.emd_loss(pred_coord[i], gt_coord)
+            self.emd_loss += emd_loss_value * self.options.weights.emd
+
         loss = chamfer_loss + image_loss * self.options.weights.reconst + \
                self.options.weights.laplace * lap_loss + \
                self.options.weights.move * move_loss + \
                self.options.weights.edge * edge_loss + \
-               self.options.weights.normal * normal_loss
+               self.options.weights.normal * normal_loss + \
+               self.edm_loss  # add EDM_loss to overall loss
 
         loss = loss * self.options.weights.constant
 
@@ -118,4 +141,7 @@ class P2MLoss(nn.Module):
             "loss_laplace": lap_loss,
             "loss_move": move_loss,
             "loss_normal": normal_loss,
+            "loss_emd": self.emd_loss,  # include EMD_loss in loss_summary
         }
+
+

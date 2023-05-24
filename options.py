@@ -66,6 +66,7 @@ options.loss.weights.constant = 1.
 options.loss.weights.chamfer = [1., 1., 1.]
 options.loss.weights.chamfer_opposite = 1.
 options.loss.weights.reconst = 0.
+options.loss.weights.edm = 1.0  # Add EDM_loss's weight
 
 options.train = edict()
 options.train.num_epochs = 50

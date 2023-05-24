@@ -2,11 +2,10 @@ import torch
 import torch.nn as nn
 
 from models.layers.chamfer_wrapper import ChamferDist
-
+from models.losses.p2m import emd_loss
 
 def test():
     torch.manual_seed(42)
-    chamfer = ChamferDist()
     dense = nn.Linear(6, 3)
     dense.cuda()
     optimizer = torch.optim.Adam(dense.parameters(), 1e-3)
@@ -15,11 +14,11 @@ def test():
     c = torch.rand(4, 5, 6).cuda()
     for i in range(30000):
         a_out = dense(a)
-        d1, d2, i1, i2 = chamfer(a_out, b)
-        loss = d1.mean() + d2.mean()
+
+        # Compute EMD_loss instead of Chamfer loss
+        loss = emd_loss(a_out, b)
 
         c_out = dense(a)
-        d1, d2, i1, i2 = chamfer(c_out, b)
 
         optimizer.zero_grad()
         loss.backward()

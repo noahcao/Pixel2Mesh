@@ -62,18 +62,15 @@ class Evaluator(CheckpointRunner):
         return 2 * prec * recall / (prec + recall + 1e-8)
 
     def evaluate_chamfer_and_f1(self, pred_vertices, gt_points, labels):
-        # calculate accurate chamfer distance; ground truth points with different lengths;
-        # therefore cannot be batched
+        # calculate EMD distance
         batch_size = pred_vertices.size(0)
-        pred_length = pred_vertices.size(1)
         for i in range(batch_size):
             gt_length = gt_points[i].size(0)
             label = labels[i].cpu().item()
-            d1, d2, i1, i2 = self.chamfer(pred_vertices[i].unsqueeze(0), gt_points[i].unsqueeze(0))
-            d1, d2 = d1.cpu().numpy(), d2.cpu().numpy()  # convert to millimeter
-            self.chamfer_distance[label].update(np.mean(d1) + np.mean(d2))
-            self.f1_tau[label].update(self.evaluate_f1(d1, d2, pred_length, gt_length, 1E-4))
-            self.f1_2tau[label].update(self.evaluate_f1(d1, d2, pred_length, gt_length, 2E-4))
+            emd = self.emd_loss(pred_vertices[i], gt_points[i])
+            self.emd_distance[label].update(emd)
+            self.f1_tau[label].update(self.evaluate_f1(emd, emd, 1, 1, 1E-4))
+            self.f1_2tau[label].update(self.evaluate_f1(emd, emd, 1, 1, 2E-4))
 
     def evaluate_accuracy(self, output, target):
         """Computes the accuracy over the k top predictions for the specified values of k"""
@@ -180,8 +177,9 @@ class Evaluator(CheckpointRunner):
             }
         elif self.options.model.name == "classifier":
             return {
-                "acc_1": self.acc_1,
-                "acc_5": self.acc_5,
+                "emd_loss": self.average_of_average_meters(self.emd_loss),
+                "f1_tau": self.average_of_average_meters(self.f1_tau),
+                "f1_2tau": self.average_of_average_meters(self.f1_2tau),
             }
 
     def evaluate_summaries(self, input_batch, out_summary):
@@ -198,3 +196,4 @@ class Evaluator(CheckpointRunner):
             # Do visualization for the first 2 images of the batch
             render_mesh = self.renderer.p2m_batch_visualize(input_batch, out_summary, self.ellipsoid.faces)
             self.summary_writer.add_image("eval_render_mesh", render_mesh, self.total_step_count)
+
