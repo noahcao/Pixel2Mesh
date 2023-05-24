@@ -46,8 +46,8 @@ model:
   name: pixel2mesh
   z_threshold: 0
 name: p2m
-num_gpus: 8
-num_workers: 16
+num_gpus: 1
+num_workers: 2
 optim:
   adam_beta1: 0.9
   lr: 0.0001
