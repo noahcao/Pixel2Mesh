@@ -16,7 +16,7 @@ class P2MLoss(nn.Module):
             nn.Parameter(idx, requires_grad=False) for idx in ellipsoid.laplace_idx])
         self.edges = nn.ParameterList([
             nn.Parameter(edges, requires_grad=False) for edges in ellipsoid.edges])
-        self.emd_loss = 0.  # initialize EMD_loss as 0
+        
 
     #define the edm_loss function
     def emd_loss(self, pred, gt):
@@ -99,7 +99,7 @@ class P2MLoss(nn.Module):
         :return: loss, loss_summary (dict)
         """
 
-        chamfer_loss, edge_loss, normal_loss, lap_loss, move_loss = 0., 0., 0., 0., 0.
+        chamfer_loss, edge_loss, normal_loss, lap_loss, move_loss, emd_loss_value = 0., 0., 0., 0., 0., 0.
         lap_const = [0.2, 1., 1.]
 
         gt_coord, gt_normal, gt_images = targets["points"], targets["normals"], targets["images"]
@@ -121,15 +121,15 @@ class P2MLoss(nn.Module):
             move_loss += lap_const[i] * move
 
             # compute EDM_loss and add to overall loss
-            emd_loss_value = self.emd_loss(pred_coord[i], gt_coord)
-            self.emd_loss += emd_loss_value * self.options.weights.emd
+            emd = self.emd_loss(pred_coord[i], gt_coord)
+            emd_loss_value += emd * self.options.weights.emd
 
         loss = chamfer_loss + image_loss * self.options.weights.reconst + \
                self.options.weights.laplace * lap_loss + \
                self.options.weights.move * move_loss + \
                self.options.weights.edge * edge_loss + \
                self.options.weights.normal * normal_loss + \
-               self.edm_loss  # add EDM_loss to overall loss
+               emd_loss_value  # add EDM_loss to overall loss
 
         loss = loss * self.options.weights.constant
 
@@ -140,7 +140,7 @@ class P2MLoss(nn.Module):
             "loss_laplace": lap_loss,
             "loss_move": move_loss,
             "loss_normal": normal_loss,
-            "loss_emd": self.emd_loss,  # include EMD_loss in loss_summary
+            "loss_emd": emd_loss_value,  # include EMD_loss in loss_summary
         }
 
 
